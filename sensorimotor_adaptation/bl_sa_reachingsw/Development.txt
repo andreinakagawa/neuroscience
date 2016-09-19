@@ -1,7 +1,0 @@
-Develop a class for controlling the protocol
-Variables:
-- Number of targets -> Perhaps default options like, one, four or eight targets
-- Distance between targets
-- Degree of perturbation (rotated cursor)
-- Starting point (origin of the cursor coordinates)
-- 

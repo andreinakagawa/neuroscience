@@ -1,0 +1,14 @@
+Considering that this software will be a standalone application for now
+
+Protocol
+- Two markers: Origin and Target
+- Reaching from left to right
+- 3 unperturbed sessions with 30 trials (reaching movements)
+- 3 perturbed sessions with 30 trials (reaching movements)
+
+Protocol controller:
+- prepare the class to specifically generate the proposed protocol
+- need a session counter and a trial counter
+- trial starts when cursor hits the origin (anywhere) and ends when the cursor
+hits he target (anywhere)
+- 

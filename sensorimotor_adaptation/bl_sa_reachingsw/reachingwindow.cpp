@@ -18,13 +18,13 @@
 #include "ui_reachingwindow.h"
 #include "protocolcontroller.h"
 
-bool flagStarted = false;
+bool flagStarted = false; //Flag indicating whether the Form has been initialized
 const int numbTrials = 30; //Number of trials
 const int numbSessions = 4; //Number of sessions
 const int distanceCenter = 400; //Distance of the target to the center
-int trialCounter = 1;
-int sessionCounter = 1;
-QString subjectName = "andrei_nakagawa";
+int trialCounter = 1; //Trial counter
+int sessionCounter = 1; //Session counter
+QString subjectName = "andrei_nakagawa"; //Name of the file to be saved
 
 ReachingWindow::ReachingWindow(QWidget *parent) :
     QWidget(parent),
@@ -77,6 +77,7 @@ void ReachingWindow::paintEvent(QPaintEvent *e)
 
     if(!this->formInit)
     {
+        //Defines the color of the brush
         pen.setColor(Qt::blue);
         painter.setPen(pen);
         pen.setWidth(15);
