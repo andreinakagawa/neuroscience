@@ -1,3 +1,9 @@
+# Windows
+*.db
+
+# Mac-OS
+*.DS_Store
+
 # Prerequisites
 *.d
 
