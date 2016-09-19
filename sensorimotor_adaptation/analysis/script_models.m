@@ -7,7 +7,7 @@
 % Contact: andrei.ufu@gmail.com
 %--------------------------------------------------------------------------
 % Description: Models of sensorimotor adaptation
-% Based on the slides from Dr. Rob van Beers, lectured in CoSMo 2015
+% Based on the slides from Dr. Robert van Beers, lectured in CoSMo 2015
 %--------------------------------------------------------------------------
 %Number of trials
 N = 400;
