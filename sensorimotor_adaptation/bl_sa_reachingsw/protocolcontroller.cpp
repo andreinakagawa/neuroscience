@@ -18,84 +18,59 @@ ProtocolController::ProtocolController()
 
 }
 
-void ProtocolController::DrawTargets(QWidget *w, QPainter *p)
+ProtocolController::ProtocolController(QWidget *p)
 {
-    int targets = 4; //Number of targets
-    int totalWidth = w->geometry().width(); //Maximum width of the screen
-    int totalHeight = w->geometry().height(); //Maximum height of the screen
-    int centerX  = totalWidth / 2;
-    int centerY = totalHeight / 2;
-
-    int targetWidth = 20;
-    int targetHeight = 20;
-
-    //Adds the desired number of targets in the screen
-    for(int i=0; i<this->numberTargets(); i++)
-    {
-        QPoint point(0,0);
-
-        switch(i)
-        {
-
-        case 0:
-            point.setX(centerX);
-            point.setY(centerY-this->distanceTarget());
-            p->drawEllipse(point,targetWidth,targetHeight);
-            break;
-
-        case 1:
-            point.setX(centerX+this->distanceTarget());
-            point.setY(centerY);
-            p->drawEllipse(point,targetWidth,targetHeight);
-            break;
-
-        case 2:
-            point.setX(centerX);
-            point.setY(centerY+this->distanceTarget());
-            p->drawEllipse(point,targetWidth,targetHeight);
-            break;
-
-        case 3:
-            point.setX(centerX-this->distanceTarget());
-            point.setY(centerY);
-            p->drawEllipse(point,targetWidth,targetHeight);
-            break;
-        }
-    }
-
-    /*
-    //Drawing the targets
-    //Draw ellipse
-    p->setBrush(Qt::blue); //To fill the ellipses
-
-    int px=0,py=0;
-
-    //Top target
-    px = totalWidth/2 - targetWidth;
-    py = 0;
-    p->drawEllipse(px,py,targetWidth,targetHeight);
-
-    //Right target
-    px = totalWidth - targetWidth;
-    py = totalHeight/2 - targetHeight;
-    p->drawEllipse(px,py,targetWidth,targetHeight);
-
-    //Bottom target
-    px = totalWidth/2 - targetWidth;
-    py = totalHeight - targetHeight;
-    p->drawEllipse(px,py,targetWidth,targetHeight);
-
-    //Left target
-    px = 0;
-    py = totalHeight/2 - targetHeight;
-    p->drawEllipse(px,py,targetWidth,targetHeight);
-    */
+    this->parent = p;
+    //Defines the center of the screen
+    this->centerX = p->geometry().width()/2;
+    this->centerY = p->geometry().height()/2;
+    //Defines the position of the origin
+    this->originX = this->centerX - this->distanceTarget;
+    this->originY = this->centerY;
+    //Defines the position of the target
+    this->targetX = this->centerX + this->distanceTarget;
+    this->targetY = this->centerY;
 }
 
-void ProtocolController::DrawTarget(QWidget *w, QPainter *p)
+void ProtocolController::DrawGUI(QPainter *p)
+{
+    //Drawing the origin
+    QPoint* pt = new QPoint(this->originX,this->originY);
+    p->setBrush(Qt::blue);
+    p->drawEllipse(*pt,this->targetWidth,this->targetHeight);
+    //Drawing the target
+    pt = new QPoint(this->targetX,this->targetY);
+    p->setBrush(Qt::red);
+    p->drawEllipse(*pt,this->targetWidth,this->targetHeight);
+}
+
+//Draw targets in the screen
+void ProtocolController::DrawTarget(QPainter *p)
 {
     QPoint pt(this->targetX,this->targetY);
-    int targetWidth = 20;
-    int targetHeight = 20;
-    p->drawEllipse(pt,targetWidth,targetHeight);
+    p->drawEllipse(pt,this->targetWidth,this->targetHeight);
+}
+
+//Creates a header file
+void ProtocolController::writeHeader()
+{
+    QString headername = fileprefix + "_header.txt";
+    fileHandler = new DataFileController(headername.toStdString());
+    if(fileHandler->Open())
+    {
+        QString header = "";
+
+        header += "Federal University of Uberlandia - Brazil\n";
+        header += "Biomedical Engineering Lab\n";
+        header += "---------------------------------------------\n";
+        header += "Sensorimotor Adaptation Task\n";
+        header += "Date: " + QDate::currentDate().toString("dd/MM/yyyy")
+                + " - " + QTime::currentTime().toString() + "\n";
+        header += "---------------------------------------------\n";
+        header += "Details of the experimental protocol\n";
+        header += "Number of sessions: " + QString::number(this->numberSessions) + "\n";
+        header += "Number of trials: " + QString::number(this->numberTrials) + "\n";
+        fileHandler->WriteData(header);
+        fileHandler->Close();
+    }
 }

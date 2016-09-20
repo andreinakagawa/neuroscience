@@ -15,67 +15,63 @@
 
 #include <QWidget>
 #include <QPainter>
+#include <QDate> //Date functions
+#include <QTime> //Clock time functions
+#include <QTimer> //Timer for saving data
+#include <QMutex> //Necessary for handling multiple acess
+#include "datafilecontroller.h" //Imports the class that saves the experiment data
+
 
 class ProtocolController
 {
-    //Properties
-    //Number of targets
-    Q_PROPERTY(int numberTargets READ numberTargets WRITE setNumberTargets)
-    //Distance from the center to the target
-    Q_PROPERTY(int distanceTarget READ distanceTarget WRITE setDistanceTarget)
-    //Number of trials by target
-    Q_PROPERTY(int numberTrialsTarget READ numberTrialsTarget WRITE setNumberTrialsTarget)
 
 public:
     //-----------------------------------------------------------------
-    //Constructor
+    //Constructors
     ProtocolController();
+    ProtocolController(QWidget *p);
+    //-----------------------------------------------------------------
+    //-----------------------------------------------------------------
+    //Methods    
+    void DrawTarget(QPainter *p);
+    void DrawGUI(QPainter *p);
+    void StartProtocol();
+    void writeHeader();
+    //-----------------------------------------------------------------
+    //Properties    
+    double targetX;
+    double targetY;
     //-----------------------------------------------------------------
 
-    //-----------------------------------------------------------------
-    //Methods
-    void DrawTargets(QWidget *w, QPainter *p);
-    void DrawTarget(QWidget *w, QPainter *p);
-    //-----------------------------------------------------------------
-    // Attributes
-    int targetX;
-    int targetY;
-    //-----------------------------------------------------------------
-    //Getters
-    int numberTargets() const
-    {
-        return m_numberTargets;
-    }
-    int distanceTarget() const
-    {
-        return m_distanceTarget;
-    }
-
-    int numberTrialsTarget() const
-    {
-        return m_numberTrialsTarget;
-    }
-    //-----------------------------------------------------------------
-
-public slots:
-    void setNumberTargets(int numberTargets)
-    {
-        m_numberTargets = numberTargets;
-    }
-    void setDistanceTarget(int distanceTarget)
-    {
-        m_distanceTarget = distanceTarget;
-    }
-
-    void setNumberTrialsTarget(int numberTrialsTarget)
-    {
-        m_numberTrialsTarget = numberTrialsTarget;
-    }
+signals:
+    void valorChanged(double valor);
 
 private:
-    int m_numberTargets;
-    int m_distanceTarget;
-    int m_numberTrialsTarget;
+    //Consts
+    //Total number of trials
+    const int numberTrials = 30;
+    //Total number of sessions
+    const int numberSessions = 1;
+    //Distance from center to target
+    const int distanceTarget = 400;
+    //Height of the target
+    const int targetHeight = 20;
+    //Width of the target
+    const int targetWidth = 20;
+    //Filename prefix
+    const QString fileprefix = "andrei_nakagawa";
+    //Objects
+    DataFileController* fileHandler;
+    QWidget* parent;
+    //Methods
+    //Properties
+    int centerX;
+    int centerY;
+    int originX;
+    int originY;
+    int tX;
+    int tY;
+    double m_valor;
 };
 
 #endif // PROTOCOLCONTROLLER_H
