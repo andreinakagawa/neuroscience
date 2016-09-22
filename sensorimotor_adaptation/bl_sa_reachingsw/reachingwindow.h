@@ -19,6 +19,8 @@
 #include <QMouseEvent> //Mouse Events for handling the visual feedback
 #include <QPainter> //Painter to draw the visual feedback of the task
 #include "protocolcontroller.h" //Imports the class that manages the protocol
+#include "guiobject.h" //Class that manages the objects to be drawn
+#include <vector> //Vector
 
 namespace Ui {
 class ReachingWindow;
@@ -41,8 +43,9 @@ public:
     void mousePressEvent(QMouseEvent *e); //Mouse press event
     void mouseMoveEvent(QMouseEvent *e); //Mouse Move Event    
 
-signals:
-    void signalPaint();
+    //Properties
+    std::vector<GUIObject> objVector;
+    GUIObject *objList;
 
 private:
     Ui::ReachingWindow *ui;

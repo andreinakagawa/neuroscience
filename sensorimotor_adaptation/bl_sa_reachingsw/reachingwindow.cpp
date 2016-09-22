@@ -19,18 +19,16 @@
 #include "ui_reachingwindow.h"
 #include "protocolcontroller.h"
 
+#include <QDebug>
+
 ReachingWindow::ReachingWindow(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::ReachingWindow)
 {
     ui->setupUi(this);
 
+    //Creates a new instance of the ProtocolController class
     protocolController = new ProtocolController(this);
-
-
-    //Connects the paint event to the procotol controller
-    connect(this,SIGNAL(signalPaint()),protocolController,SLOT(updateGUI())
-            ,Qt::QueuedConnection);
 }
 
 ReachingWindow::~ReachingWindow()
@@ -41,9 +39,14 @@ ReachingWindow::~ReachingWindow()
 void ReachingWindow::paintEvent(QPaintEvent *e)
 {
     //Painter
-    QPainter painter(this);
-
-    emit this->signalPaint();
+    QPainter painter(this);    
+    std::vector<GUIObject*> v1 = this->protocolController->updateGUI();
+    for(int i=0; i<v1.size(); i++)
+    {
+        painter.setPen(*v1.at(i)->pen);
+        painter.setBrush(v1.at(i)->pen->color());
+        painter.drawEllipse(*v1.at(i)->point,v1.at(i)->width,v1.at(i)->height);
+    }
 
     update();
 }
