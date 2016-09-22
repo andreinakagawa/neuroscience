@@ -20,4 +20,5 @@ hits the target (anywhere)
 
 reachingwindow:
 - needs to initialize the experimental protocol
-- needs to trigger events when the cursor hits the origin or the target
+- trigger a paint event. the procotol controller generates the object
+to be drawn in the GUI
