@@ -13,7 +13,7 @@ CursorController::CursorController()
 }
 
 CursorController::CursorController(int _perturbation)
-{    
+{
     this->setPerturbation(_perturbation);
 }
 
@@ -40,12 +40,16 @@ void CursorController::RotatePoint()
     this->setY(ry);
 }
 
-void CursorController::DrawPoint(QPainter *painter, QPen *pen)
-{
+void CursorController::DrawPoint(QPainter *painter)
+{    
+    QPen pen(Qt::green);
+    pen.setWidth(0);
+    painter->setPen(pen);
+    painter->setBrush(Qt::green);
     QPointF fp;
     fp.setX(this->x());
     fp.setY(this->y());
-    painter->drawEllipse(fp,6,6);
+    painter->drawEllipse(fp,15,15);
 }
 
 double CursorController::Deg2Rad(int _deg)

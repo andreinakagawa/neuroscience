@@ -17,12 +17,13 @@
 #include <QPoint>
 #include <QPainter>
 #include <QPen>
+#include <QThread>
 
 #define M_PI 3.14159265358979323846
 
-class CursorController : public QPoint
+class CursorController : public QPoint, public QThread
 {
-    //Properties    
+    //Properties
     //The degree of the perturbation
     //Q_PROPERTY(int perturbation READ perturbation WRITE setPerturbation)
     //Q_PROPERTY(int originX READ originX WRITE setOriginX)
@@ -32,10 +33,11 @@ public:
     //Constructors
     CursorController(); //Default
     CursorController(int _perturbation); //Custom
+    //~CursorController();
 
     //Methods
     void RotatePoint();
-    void DrawPoint(QPainter *painter, QPen *pen);
+    void DrawPoint(QPainter *painter);
 
     //Getters and setters
     //perturbation
@@ -69,7 +71,7 @@ public:
 
 private:
     //Properties
-    int m_perturbation;    
+    int m_perturbation;
     int m_originX;
     int m_originY;
 
