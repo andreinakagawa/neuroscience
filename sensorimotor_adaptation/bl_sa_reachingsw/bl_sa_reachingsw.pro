@@ -17,13 +17,15 @@ SOURCES += main.cpp\
     datafilecontroller.cpp \
     reachingwindow.cpp \
     cursorcontroller.cpp \
-    protocolcontroller.cpp
+    protocolcontroller.cpp \
+    guiobject.cpp
 
 HEADERS  += mainwindow.h \
     datafilecontroller.h \
     reachingwindow.h \
     cursorcontroller.h \
-    protocolcontroller.h
+    protocolcontroller.h \
+    guiobject.h
 
 FORMS    += mainwindow.ui \
     reachingwindow.ui
