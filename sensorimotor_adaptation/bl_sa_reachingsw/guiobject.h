@@ -1,3 +1,15 @@
+/*
+ * ----------------------------------------------------------------------------
+ * FEDERAL UNIVERSITY OF UBERLÂNDIA
+ * Faculty of Electrical Engineering
+ * Biomedical Engineering Laboratory
+ * Author: Andrei Nakagawa, MSc
+ * contact: andrei.ufu@gmail.com
+ * ----------------------------------------------------------------------------
+ * Description:
+ * ----------------------------------------------------------------------------
+ * */
+
 #ifndef GUIOBJECT_H
 #define GUIOBJECT_H
 
@@ -5,10 +17,21 @@
 #include <QPoint>
 #include <QPointF>
 
-class GUIObject
+class GUIObject : public QObject
 {
+  Q_OBJECT
+
 public:
-    GUIObject();    
+    GUIObject(); //Constructor
+    ~GUIObject(); //Destructor
+
+    QPen *pen;
+    QPointF *point;
+    QColor *paintColor;
+    int width;
+    int height;
+    enum objectType{Ellipse=1,Rectangle=2};
+    objectType type;
 };
 
 #endif // GUIOBJECT_H
