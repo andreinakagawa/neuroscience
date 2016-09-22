@@ -19,7 +19,7 @@
 #include "ui_reachingwindow.h"
 #include "protocolcontroller.h"
 
-#include <QDebug>
+bool flag = true;
 
 ReachingWindow::ReachingWindow(QWidget *parent) :
     QWidget(parent),
@@ -39,7 +39,7 @@ ReachingWindow::~ReachingWindow()
 void ReachingWindow::paintEvent(QPaintEvent *e)
 {
     //Painter
-    QPainter painter(this);    
+    QPainter painter(this);
     std::vector<GUIObject*> v1 = this->protocolController->updateGUI();
     for(int i=0; i<v1.size(); i++)
     {
@@ -58,7 +58,7 @@ void ReachingWindow::mousePressEvent(QMouseEvent *e)
 
 void ReachingWindow::mouseMoveEvent(QMouseEvent *e)
 {
-
+    this->protocolController->MouseMove();
 }
 
 /*
