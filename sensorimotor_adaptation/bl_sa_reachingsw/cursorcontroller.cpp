@@ -33,23 +33,11 @@ void CursorController::RotatePoint()
     double fay = (ay*cos(this->rad)) + (ax*sin(this->rad));
 
     //Translates the rotated point back to the original coordinates
-    int rx = round(fax+this->originX());
-    int ry = round(fay+this->originY());
+    double rx = round(fax+this->originX());
+    double ry = round(fay+this->originY());
 
     this->setX(rx);
     this->setY(ry);
-}
-
-void CursorController::DrawPoint(QPainter *painter)
-{    
-    QPen pen(Qt::green);
-    pen.setWidth(0);
-    painter->setPen(pen);
-    painter->setBrush(Qt::green);
-    QPointF fp;
-    fp.setX(this->x());
-    fp.setY(this->y());
-    painter->drawEllipse(fp,15,15);
 }
 
 double CursorController::Deg2Rad(int _deg)

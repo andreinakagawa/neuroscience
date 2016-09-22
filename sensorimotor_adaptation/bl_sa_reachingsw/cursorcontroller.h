@@ -25,9 +25,9 @@ class CursorController : public QPoint, public QThread
 {
     //Properties
     //The degree of the perturbation
-    //Q_PROPERTY(int perturbation READ perturbation WRITE setPerturbation)
-    //Q_PROPERTY(int originX READ originX WRITE setOriginX)
-    //Q_PROPERTY(int originY READ originY WRITE setoriginY)
+    Q_PROPERTY(int perturbation READ perturbation WRITE setPerturbation)
+    Q_PROPERTY(double originX READ originX WRITE setOriginX)
+    Q_PROPERTY(double originY READ originY WRITE setoriginY)
 
 public:
     //Constructors
@@ -37,7 +37,6 @@ public:
 
     //Methods
     void RotatePoint();
-    void DrawPoint(QPainter *painter);
 
     //Getters and setters
     //perturbation
