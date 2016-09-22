@@ -61,9 +61,11 @@ private:
     //Distance from center to target
     const int distanceTarget = 500;
     //Height of the target
-    const int targetHeight = 20;
+    const int objHeight = 30;
     //Width of the target
-    const int targetWidth = 20;
+    const int objWidth = 30;
+    const int cursorWidth = 20;
+    const int cursorHeight = 20;
     //Defines the session
     const bool perturbation = false;
     //Filename prefix
@@ -79,8 +81,7 @@ private:
     //Methods
     //Method that updates what needs to be drawn in the GUI
     void writeHeader();
-    //Properties
-    bool flagStarted = false;    
+    //Properties    
     int centerX;
     int centerY;
     int originX;

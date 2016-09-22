@@ -69,52 +69,31 @@ std::vector<GUIObject*> ProtocolController::updateGUI()
 {
     std::vector<GUIObject*> vobj;
 
-    if(this->flagStarted)
+    GUIObject* x = new GUIObject();
+    x->point = new QPointF(this->originX,this->originY);
+    x->pen = new QPen(Qt::blue);
+    x->pen->setWidth(0);
+    x->width = this->objWidth;
+    x->height = this->objHeight;
+    vobj.push_back(x);
+
+    GUIObject* y = new GUIObject();
+    y->point = new QPointF(this->targetX,this->targetY);
+    y->pen = new QPen(Qt::red);
+    y->pen->setWidth(0);
+    y->width = this->objWidth;
+    y->height = this->objHeight;
+    vobj.push_back(y);
+
+    if(!this->perturbation)
     {
-        GUIObject* x = new GUIObject();
-        x->point = new QPointF(this->originX,this->originY);
-        x->pen = new QPen(Qt::blue);
-        x->pen->setWidth(0);
-        x->width = this->targetWidth;
-        x->height = this->targetHeight;
-        vobj.push_back(x);
-
-        GUIObject* y = new GUIObject();
-        y->point = new QPointF(this->targetX,this->targetY);
-        y->pen = new QPen(Qt::red);
-        y->pen->setWidth(0);
-        y->width = this->targetWidth;
-        y->height = this->targetHeight;
-        vobj.push_back(y);
-
         GUIObject *z = new GUIObject();
         z->point = new QPointF(QCursor::pos().x(),QCursor::pos().y());
         z->pen = new QPen(Qt::green);
         z->pen->setWidth(0);
-        z->width = this->targetWidth;
-        z->height = this->targetHeight;
+        z->width = this->cursorWidth;
+        z->height = this->cursorHeight;
         vobj.push_back(z);
-
-    }
-    else
-    {
-        GUIObject* x = new GUIObject();
-        x->point = new QPointF(this->originX,this->originY);
-        x->pen = new QPen(Qt::blue);
-        x->pen->setWidth(0);
-        x->width = this->targetWidth;
-        x->height = this->targetHeight;
-        vobj.push_back(x);
-
-        GUIObject* y = new GUIObject();
-        y->point = new QPointF(this->targetX,this->targetY);
-        y->pen = new QPen(Qt::red);
-        y->pen->setWidth(0);
-        y->width = this->targetWidth;
-        y->height = this->targetHeight;
-        vobj.push_back(y);
-
-        this->flagStarted = true;
     }
 
     return vobj;
