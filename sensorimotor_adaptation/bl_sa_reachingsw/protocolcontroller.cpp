@@ -43,6 +43,8 @@ ProtocolController::ProtocolController(QWidget *p)
     //Sets the cursor to the center of the screen
     QCursor::setPos(this->centerX,this->centerY);
 
+    //Creates a new mutex
+    this->mutex = new QMutex();
     //Creates a new thread
     this->workerThread = new QThread;
     //Starts the thread
@@ -61,14 +63,27 @@ ProtocolController::ProtocolController(QWidget *p)
 
     //Writes the header file
     this->writeHeader();
+
+    //Initializes the cursor controller
+    this->cursorController = new CursorController();
+    if(this->perturbation)
+    {
+        this->cursorController->setPerturbation(this->perturbationDegree);
+        this->cursorController->setOriginX(this->originX);
+        this->cursorController->setOriginY(this->originY);
+    }
+
+    QCursor::setPos(this->originX,this->originY);
 }
 
 //This method updates the objects that needs to be drawn in the GUI
 //These objects can be targets, origin or even the visual feedback position
 std::vector<GUIObject*> ProtocolController::updateGUI()
 {
+    //Creates a vector containing the GUI objects
     std::vector<GUIObject*> vobj;
 
+    //Creates the origin marker
     GUIObject* x = new GUIObject();
     x->point = new QPointF(this->originX,this->originY);
     x->pen = new QPen(Qt::blue);
@@ -77,6 +92,7 @@ std::vector<GUIObject*> ProtocolController::updateGUI()
     x->height = this->objHeight;
     vobj.push_back(x);
 
+    //Creates the target marker
     GUIObject* y = new GUIObject();
     y->point = new QPointF(this->targetX,this->targetY);
     y->pen = new QPen(Qt::red);
@@ -85,16 +101,25 @@ std::vector<GUIObject*> ProtocolController::updateGUI()
     y->height = this->objHeight;
     vobj.push_back(y);
 
-    if(!this->perturbation)
-    {
-        GUIObject *z = new GUIObject();
-        z->point = new QPointF(QCursor::pos().x(),QCursor::pos().y());
-        z->pen = new QPen(Qt::green);
-        z->pen->setWidth(0);
-        z->width = this->cursorWidth;
-        z->height = this->cursorHeight;
-        vobj.push_back(z);
-    }
+    //Handles the cursor (visual feedback drawing)
+    //If there is no perturbation
+    GUIObject *w = new GUIObject();
+    w->point = new QPointF(QCursor::pos().x(),QCursor::pos().y());
+    w->pen = new QPen(Qt::yellow);
+    w->pen->setWidth(0);
+    w->width = this->cursorWidth;
+    w->height = this->cursorHeight;
+    vobj.push_back(w);
+
+    //Handles the cursor (visual feedback drawing)
+    //If there is no perturbation
+    GUIObject *z = new GUIObject();
+    z->point = new QPointF(this->cursorController->x(),this->cursorController->y());
+    z->pen = new QPen(Qt::green);
+    z->pen->setWidth(0);
+    z->width = this->cursorWidth;
+    z->height = this->cursorHeight;
+    vobj.push_back(z);
 
     return vobj;
 }
@@ -111,6 +136,8 @@ void ProtocolController::MouseMove()
     this->mutex->lock();
     this->cursorController->setX(QCursor::pos().x());
     this->cursorController->setY(QCursor::pos().y());
+    if(this->perturbation)
+        this->cursorController->RotatePoint();
     this->mutex->unlock();
 }
 

@@ -67,7 +67,8 @@ private:
     const int cursorWidth = 20;
     const int cursorHeight = 20;
     //Defines the session
-    const bool perturbation = false;
+    const bool perturbation = true;
+    const int perturbationDegree = 15;
     //Filename prefix
     const QString fileprefix = "andrei_nakagawa";
     //Objects
