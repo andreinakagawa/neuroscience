@@ -63,36 +63,6 @@ ProtocolController::ProtocolController(QWidget *p)
     this->writeHeader();
 }
 
-void ProtocolController::DrawGUI(QPainter *p)
-{
-    if(this->flagStarted) //Drawing the cursor
-    {
-        //If the perturbation is off
-        if(!this->perturbation)
-        {
-            //this->cursorHandler->DrawPoint(p);
-        }
-    }
-    else //The first paint event should be for drawing the origin and targets
-    {
-        //Drawing the origin
-        QPen pen(Qt::blue);
-        pen.setWidth(0);
-        p->setPen(pen);
-        p->setBrush(Qt::blue);
-        QPoint* pt = new QPoint(this->originX,this->originY);
-        //p->drawEllipse(*pt,this->targetWidth,this->targetHeight);
-
-        //Drawing the target
-        pen.setColor(Qt::red);
-        pen.setWidth(0);
-        p->setBrush(Qt::red);
-        p->setPen(pen);
-        pt = new QPoint(this->targetX,this->targetY);
-        //p->drawEllipse(*pt,this->targetWidth,this->targetHeight);
-    }
-}
-
 //This method updates the objects that needs to be drawn in the GUI
 //These objects can be targets, origin or even the visual feedback position
 std::vector<GUIObject*> ProtocolController::updateGUI()

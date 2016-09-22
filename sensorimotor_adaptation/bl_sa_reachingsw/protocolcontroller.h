@@ -40,8 +40,7 @@ public:
     //~ProtocolController();
     //-----------------------------------------------------------------
     //-----------------------------------------------------------------
-    //Methods
-    void DrawGUI(QPainter *p);
+    //Methods    
     std::vector<GUIObject*> updateGUI();
     void MouseMove();
     //-----------------------------------------------------------------
@@ -60,11 +59,11 @@ private:
     //Total number of sessions
     const int numberSessions = 1;
     //Distance from center to target
-    const int distanceTarget = 400;
+    const int distanceTarget = 500;
     //Height of the target
-    const int targetHeight = 30;
+    const int targetHeight = 20;
     //Width of the target
-    const int targetWidth = 30;
+    const int targetWidth = 20;
     //Defines the session
     const bool perturbation = false;
     //Filename prefix
