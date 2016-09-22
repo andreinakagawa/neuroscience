@@ -13,18 +13,11 @@
 
 #include <QScreen>
 #include <QPaintDevice>
+#include <QTime>
 
 #include "reachingwindow.h"
 #include "ui_reachingwindow.h"
 #include "protocolcontroller.h"
-
-bool flagStarted = false; //Flag indicating whether the Form has been initialized
-const int numbTrials = 30; //Number of trials
-const int numbSessions = 4; //Number of sessions
-const int distanceCenter = 400; //Distance of the target to the center
-int trialCounter = 1; //Trial counter
-int sessionCounter = 1; //Session counter
-QString subjectName = "andrei_nakagawa"; //Name of the file to be saved
 
 ReachingWindow::ReachingWindow(QWidget *parent) :
     QWidget(parent),
@@ -32,131 +25,40 @@ ReachingWindow::ReachingWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    //Sets the background color of the form
-    //Default: black
-    this->setStyleSheet("background-color: black;");
+    protocolController = new ProtocolController(this);
 
-    //Maximizes the window to fullscreen
-    //Necessary, so the only thing on screen is the protocol
-    this->showFullScreen();
 
-    //Hides the mouse cursor
-    this->setCursor(Qt::BlankCursor);
+    //Connects the paint event to the procotol controller
+    connect(this,SIGNAL(signalPaint()),protocolController,SLOT(updateGUI())
+            ,Qt::QueuedConnection);
+}
 
-    //Enables mouse tracking
-    this->setMouseTracking(true);
-
-    //Defines the type of the timer
-    //Precise timer guarantees a better time resolution
-    this->timer->setTimerType(Qt::PreciseTimer);
-    this->timer->setInterval(1); // 1000 Hz sampling frequency
-
-    //Connects the timer to the desired method
-    connect(this->timer,SIGNAL(timeout()),SLOT(timerTick()));    
-
-    //Sets the cursor to the center of the screen
-    QCursor::setPos((this->geometry().width()/2), this->geometry().height()/2);
-
-    //Protocol
-    //One target to the right
-    this->protocolController->setNumberTargets(1);
-    //Sets the number of trials per target
-    this->protocolController->setNumberTrialsTarget(numbTrials);
-
-    //Creates the file header
-    QString fileheader = subjectName + "_header.txt";
-    this->writeHeader(fileheader.toStdString());
+ReachingWindow::~ReachingWindow()
+{
+    delete ui;
 }
 
 void ReachingWindow::paintEvent(QPaintEvent *e)
 {
     //Painter
     QPainter painter(this);
-    //Pen
-    QPen pen(Qt::black);
 
-    if(!this->formInit)
-    {
-        //Defines the color of the brush
-        pen.setColor(Qt::blue);
-        painter.setPen(pen);
-        pen.setWidth(15);
-
-        //this->protocolController->DrawTargets(this,&painter);
-
-        //Origin
-        painter.setBrush(Qt::yellow);
-        this->protocolController->targetX = (this->geometry().width()/2) - distanceCenter;
-        this->protocolController->targetY = this->geometry().height()/2;
-        this->protocolController->DrawTarget(this,&painter);
-
-        //Target
-        painter.setBrush(Qt::blue);
-        this->protocolController->targetX = (this->geometry().width()/2) + distanceCenter;
-        this->protocolController->targetY = this->geometry().height()/2;
-        this->protocolController->DrawTarget(this,&painter);
-
-        //Cursor
-        pen.setColor(Qt::green);
-        pen.setWidth(15);
-        painter.setPen(pen);
-    }
-    else
-        this->formInit=true;
-
-
-    this->mutex->lock();
-    painter.setBrush(Qt::green);
-    this->cursorController->DrawPoint(&painter, &pen);
-    this->mutex->unlock();
+    emit this->signalPaint();
 
     update();
 }
 
 void ReachingWindow::mousePressEvent(QMouseEvent *e)
 {
-    //If the left button was pressed -> left click
-    if(e->button() == Qt::LeftButton)
-    {
-        if(!this->trialStarted)
-        {
-            QString filename = subjectName + "_" + QString::number(sessionCounter) + "_" + QString::number(trialCounter) + ".txt";
-            this->datafileController = new DataFileController(filename.toStdString());
-            this->datafileController->Open();
-            this->timer->start();
-            this->trialStarted = true;
-        }
-        else
-        {
-            this->timer->stop();
-            this->trialStarted = false;            
-            for (int i=0; i<this->vData.size(); i++)
-            {
-                this->datafileController->WriteData(QString::number(vData.at(i)[0]) + "\t" + QString::number(vData.at(i)[1]));
-                //this->datafileController->WriteData(QString::number(vData.at(i)) + "\n");
-            }
-            this->vData.clear();
-            trialCounter++;
-            if(trialCounter > numbTrials)
-                this->close();
 
-            this->datafileController->Close();            
-        }
-    }
 }
 
 void ReachingWindow::mouseMoveEvent(QMouseEvent *e)
 {
-    this->mutex->lock();
-    QCursor cursor;
-    this->posX = cursor.pos().x();
-    this->posY = cursor.pos().y();
-    //Sets the points of the cursor controller    
-    this->cursorController->setX(cursor.pos().x());
-    this->cursorController->setY(cursor.pos().y());
-    this->mutex->unlock();
+
 }
 
+/*
 void ReachingWindow::writeHeader(std::string _filename)
 {
     //Saves the header file
@@ -187,21 +89,4 @@ void ReachingWindow::writeHeader(std::string _filename)
     this->datafileController->WriteData(header);
     this->datafileController->Close();
 }
-
-void ReachingWindow::timerTick()
-{
-    this->mutex->lock();
-
-    QCursor qc;
-    int* cursorPoints = (int*)malloc(2*sizeof(int));
-    cursorPoints[0] = qc.pos().x();
-    cursorPoints[1] = qc.pos().y();
-    this->vData.push_back(cursorPoints);
-
-    this->mutex->unlock();
-}
-
-ReachingWindow::~ReachingWindow()
-{
-    delete ui;
-}
+*/
