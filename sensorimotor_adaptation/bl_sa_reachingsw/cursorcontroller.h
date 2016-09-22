@@ -15,14 +15,14 @@
 
 #include <math.h>
 #include <QPoint>
-#include <QPainter>
-#include <QPen>
-#include <QThread>
+#include <QObject>
 
 #define M_PI 3.14159265358979323846
 
-class CursorController : public QPoint, public QThread
+class CursorController : public QPoint
 {
+    Q_OBJECT
+    
     //Properties
     //The degree of the perturbation
     Q_PROPERTY(int perturbation READ perturbation WRITE setPerturbation)
