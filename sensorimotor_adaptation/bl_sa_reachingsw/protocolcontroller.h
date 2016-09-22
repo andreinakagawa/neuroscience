@@ -15,39 +15,46 @@
 
 #include <QWidget>
 #include <QPainter>
+#include <QCursor> //Handles the mouse cursor
 #include <QDate> //Date functions
 #include <QTime> //Clock time functions
+#include <QThread> //Handles multi-threading
+#include <QMutex> //Handles multi-threading
 #include <QTimer> //Timer for saving data
 #include <QMutex> //Necessary for handling multiple acess
+#include <vector>
 #include "datafilecontroller.h" //Imports the class that saves the experiment data
+#include "cursorcontroller.h" //Handles the mouse cursor
+#include "guiobject.h" //Defines the objects to be drawn in the GUI
 
 
-class ProtocolController
+
+class ProtocolController : public QObject
 {
+    Q_OBJECT
 
 public:
     //-----------------------------------------------------------------
     //Constructors
-    ProtocolController();
     ProtocolController(QWidget *p);
+    //~ProtocolController();
     //-----------------------------------------------------------------
     //-----------------------------------------------------------------
-    //Methods    
-    void DrawTarget(QPainter *p);
+    //Methods
     void DrawGUI(QPainter *p);
-    void StartProtocol();
-    void writeHeader();
+    std::vector<GUIObject*> updateGUI();
+    void MouseMove();
     //-----------------------------------------------------------------
-    //Properties    
-    double targetX;
-    double targetY;
     //-----------------------------------------------------------------
 
-signals:
-    void valorChanged(double valor);
+
+public slots:
+    void timerTick(); //Method evoked by the timer    
 
 private:
     //Consts
+    //Sampling frequency (Hz)
+    const int samplingFrequency = 500;
     //Total number of trials
     const int numberTrials = 30;
     //Total number of sessions
@@ -55,23 +62,32 @@ private:
     //Distance from center to target
     const int distanceTarget = 400;
     //Height of the target
-    const int targetHeight = 20;
+    const int targetHeight = 30;
     //Width of the target
-    const int targetWidth = 20;
+    const int targetWidth = 30;
+    //Defines the session
+    const bool perturbation = false;
     //Filename prefix
     const QString fileprefix = "andrei_nakagawa";
     //Objects
-    DataFileController* fileHandler;
-    QWidget* parent;
+    QWidget *parent;
+    DataFileController *fileController;
+    CursorController *cursorController;
+    QMutex* mutex;
+    QTimer *timer;
+    QThread *workerThread;
+    GUIObject* gui;
     //Methods
+    //Method that updates what needs to be drawn in the GUI
+    void writeHeader();
     //Properties
+    bool flagStarted = false;    
     int centerX;
     int centerY;
     int originX;
     int originY;
-    int tX;
-    int tY;
-    double m_valor;
+    int targetX;
+    int targetY;
 };
 
 #endif // PROTOCOLCONTROLLER_H
