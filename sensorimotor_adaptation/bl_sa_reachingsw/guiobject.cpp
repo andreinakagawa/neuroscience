@@ -26,3 +26,20 @@ GUIObject::~GUIObject()
     free(this->point);
     free(this->pen);
 }
+
+bool GUIObject::HasCollided(GUIObject* _obj)
+{
+    //Measuring the Euclidean Distance
+    double distance = this->EuclideanDistance(_obj);
+    if(distance < (this->width+_obj->width))
+        return true;
+    else
+        return false;
+}
+
+double GUIObject::EuclideanDistance(GUIObject* _obj)
+{
+    double x = (double)this->point->x() - (double)_obj->point->x();
+    double y = (double)this->point->y() - (double)_obj->point->y();
+    return std::sqrt(std::pow(x,2) + std::pow(y,2));
+}

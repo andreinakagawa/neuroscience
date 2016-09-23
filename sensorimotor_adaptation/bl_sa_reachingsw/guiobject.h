@@ -25,6 +25,11 @@ public:
     GUIObject(); //Constructor
     ~GUIObject(); //Destructor
 
+    //Methods
+    bool HasCollided(GUIObject* _obj);
+    double EuclideanDistance(GUIObject* _obj);
+
+    //Properties
     QPen *pen;
     QPointF *point;
     QColor *paintColor;
