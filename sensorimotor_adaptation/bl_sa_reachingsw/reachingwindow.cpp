@@ -40,12 +40,24 @@ void ReachingWindow::paintEvent(QPaintEvent *e)
 {
     //Painter
     QPainter painter(this);
-    std::vector<GUIObject*> v1 = this->protocolController->updateGUI();
-    for(int i=0; i<v1.size(); i++)
+    QVector<GUIObject*> vGUIObjects = this->protocolController->updateGUI();
+    for(int i=0; i<vGUIObjects.size(); i++)
     {
-        painter.setPen(*v1.at(i)->pen);
-        painter.setBrush(v1.at(i)->pen->color());
-        painter.drawEllipse(*v1.at(i)->point,v1.at(i)->width,v1.at(i)->height);
+        painter.setPen(*vGUIObjects.at(i)->pen);
+        painter.setBrush(vGUIObjects.at(i)->pen->color());
+        switch(vGUIObjects.at(i)->type)
+        {
+            case GUIObject::Ellipse:
+            painter.drawEllipse(*vGUIObjects.at(i)->point,
+                                vGUIObjects.at(i)->width,vGUIObjects.at(i)->height);
+            break;
+
+        case GUIObject::Rectangle:
+            painter.drawRect((int)vGUIObjects.at(i)->point->x(),
+                             (int)vGUIObjects.at(i)->point->y(),
+                                vGUIObjects.at(i)->width,vGUIObjects.at(i)->height);
+            break;
+        }
     }
 
     update();

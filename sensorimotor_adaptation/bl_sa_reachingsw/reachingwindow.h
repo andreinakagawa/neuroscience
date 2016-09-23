@@ -20,7 +20,7 @@
 #include <QPainter> //Painter to draw the visual feedback of the task
 #include "protocolcontroller.h" //Imports the class that manages the protocol
 #include "guiobject.h" //Class that manages the objects to be drawn
-#include <vector> //Vector
+#include <QVector> //Vector
 
 namespace Ui {
 class ReachingWindow;
