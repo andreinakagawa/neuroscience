@@ -17,20 +17,26 @@
 
 ProtocolController::ProtocolController(QWidget *p)
 {
+    this->parent = p;
+    this->Initialize();
+}
+
+void ProtocolController::Initialize()
+{
     //Sets the background color of the form
     //Default: black
-    p->setStyleSheet("background-color: black;");
+    this->parent->setStyleSheet("background-color: black;");
     //Maximizes the window to fullscreen
     //Necessary, so the only thing on screen is the protocol
-    p->showFullScreen();
+    this->parent->showFullScreen();
     //Hides the mouse cursor
-    p->setCursor(Qt::BlankCursor);
+    this->parent->setCursor(Qt::BlankCursor);
     //Enables mouse tracking
-    p->setMouseTracking(true);
+    this->parent->setMouseTracking(true);
 
     //Defines the center of the screen
-    this->centerX = p->geometry().width()/2;
-    this->centerY = p->geometry().height()/2;
+    this->centerX = this->parent->geometry().width()/2;
+    this->centerY = this->parent->geometry().height()/2;
 
     //Defines the position of the origin
     this->originX = this->centerX - this->distanceTarget;
@@ -50,7 +56,7 @@ ProtocolController::ProtocolController(QWidget *p)
     //Starts the thread
     this->workerThread->start();
     //Creates a new timer
-    this->timer = new QTimer(this);
+    this->timer = new QTimer(0);
     //Precise timer is prefered
     this->timer->setTimerType(Qt::PreciseTimer);
     //Finds the timer interval (ms) according to the sampling frequency
@@ -59,7 +65,12 @@ ProtocolController::ProtocolController(QWidget *p)
     //Connects the timer to the processing event
     connect(this->timer,SIGNAL(timeout()),this,SLOT(timerTick()));
     //Moves the protocol controller to a different Thread
-    this->moveToThread(workerThread);
+    this->timer->moveToThread(workerThread);
+
+    connect(this,SIGNAL(start()),this->timer,SLOT(start()),
+            Qt::QueuedConnection);
+    connect(this,SIGNAL(stop()),this->timer,SLOT(stop()),
+            Qt::QueuedConnection);
 
     //Writes the header file
     this->writeHeader();
@@ -73,53 +84,98 @@ ProtocolController::ProtocolController(QWidget *p)
         this->cursorController->setOriginY(this->originY);
     }
 
+    this->trialCounter=1;
+    this->sessionCounter=1;
+
     QCursor::setPos(this->originX,this->originY);
+}
+
+ProtocolController::~ProtocolController()
+{
+    if(this->flagRecord)
+        emit this->stop();
+    free(this->timer);
+    free(this->fileController);
+    free(this->cursorController);
+    free(this->mutex);
+    this->workerThread->deleteLater();
+    free(this->workerThread);
 }
 
 //This method updates the objects that needs to be drawn in the GUI
 //These objects can be targets, origin or even the visual feedback position
-std::vector<GUIObject*> ProtocolController::updateGUI()
+QVector<GUIObject*> ProtocolController::updateGUI()
 {
     //Creates a vector containing the GUI objects
-    std::vector<GUIObject*> vobj;
+    QVector<GUIObject*> vobj;
+    double x=0;
+    double y=0;
 
     //Creates the origin marker
-    GUIObject* x = new GUIObject();
-    x->point = new QPointF(this->originX,this->originY);
-    x->pen = new QPen(Qt::blue);
-    x->pen->setWidth(0);
-    x->width = this->objWidth;
-    x->height = this->objHeight;
-    vobj.push_back(x);
+    GUIObject* objOrigin = new GUIObject();
+    x = this->originX - (this->objWidth/2.0);
+    y = this->originY - (this->objHeight/2.0);
+    objOrigin->point = new QPointF(x,y);
+    objOrigin->pen = new QPen(Qt::blue);
+    objOrigin->pen->setWidth(0);
+    objOrigin->width = this->objWidth;
+    objOrigin->height = this->objHeight;
+    objOrigin->type = GUIObject::Rectangle;
+    vobj.push_back(objOrigin);
 
     //Creates the target marker
-    GUIObject* y = new GUIObject();
-    y->point = new QPointF(this->targetX,this->targetY);
-    y->pen = new QPen(Qt::red);
-    y->pen->setWidth(0);
-    y->width = this->objWidth;
-    y->height = this->objHeight;
-    vobj.push_back(y);
+    GUIObject* objTarget = new GUIObject();
+    x = this->targetX - (this->objWidth/2.0);
+    y = this->targetY - (this->objHeight/2.0);
+    objTarget->point = new QPointF(x,y);
+    objTarget->pen = new QPen(Qt::red);
+    objTarget->pen->setWidth(0);
+    objTarget->width = this->objWidth;
+    objTarget->height = this->objHeight;
+    objTarget->type = GUIObject::Rectangle;
+    vobj.push_back(objTarget);
 
-    //Handles the cursor (visual feedback drawing)
-    //If there is no perturbation
-    GUIObject *w = new GUIObject();
-    w->point = new QPointF(QCursor::pos().x(),QCursor::pos().y());
-    w->pen = new QPen(Qt::yellow);
-    w->pen->setWidth(0);
-    w->width = this->cursorWidth;
-    w->height = this->cursorHeight;
-    vobj.push_back(w);
+    //Creates an object that represents the mouse cursor
+    GUIObject *objMouseCursor = new GUIObject();
+    x = QCursor::pos().x() - (this->cursorWidth/2.0);
+    y = QCursor::pos().y() - (this->cursorHeight/2.0);
+    objMouseCursor->point = new QPointF(x,y);
+    objMouseCursor->pen = new QPen(Qt::yellow);
+    objMouseCursor->pen->setWidth(0);
+    objMouseCursor->width = this->cursorWidth;
+    objMouseCursor->height = this->cursorHeight;
+    objMouseCursor->type = GUIObject::Ellipse;
+    vobj.push_back(objMouseCursor);
 
-    //Handles the cursor (visual feedback drawing)
-    //If there is no perturbation
-    GUIObject *z = new GUIObject();
-    z->point = new QPointF(this->cursorController->x(),this->cursorController->y());
-    z->pen = new QPen(Qt::green);
-    z->pen->setWidth(0);
-    z->width = this->cursorWidth;
-    z->height = this->cursorHeight;
-    vobj.push_back(z);
+    //Creates an object that represents the visual feedback
+    //Can be different from the actual mouse movement
+    GUIObject *objFeedbackCursor = new GUIObject();
+    x = this->cursorController->x() - (this->cursorWidth/2.0);
+    y = this->cursorController->y() - (this->cursorHeight/2.0);
+    objFeedbackCursor->point = new QPointF(x,y);
+    objFeedbackCursor->pen = new QPen(Qt::green);
+    objFeedbackCursor->pen->setWidth(0);
+    objFeedbackCursor->width = this->cursorWidth;
+    objFeedbackCursor->height = this->cursorHeight;
+    objFeedbackCursor->type = GUIObject::Ellipse;
+    vobj.push_back(objFeedbackCursor);
+
+    //Checks if the visual feedback cursor has collided with the origin
+    //In this case, the data acquisition is initiated
+    if(objFeedbackCursor->HasCollided(objOrigin) && flagRecord==false)
+    {        
+        emit this->start();
+        this->flagRecord=true;
+    }
+    //Checks if the visual feedback cursor has collided with the
+    //target. In this case, the data acquisition is stopped
+    //and saved in a file
+    else if(objFeedbackCursor->HasCollided(objTarget) && flagRecord==true)
+    {        
+        emit this->stop();
+        this->saveData();
+        this->flagRecord=false;
+    }
 
     return vobj;
 }
@@ -127,7 +183,9 @@ std::vector<GUIObject*> ProtocolController::updateGUI()
 void ProtocolController::timerTick()
 {
     this->mutex->lock();
-
+    QString val = QString::number(QCursor::pos().x()) + "\t" +
+            QString::number(QCursor::pos().y());
+    vData.push_back(val);
     this->mutex->unlock();
 }
 
@@ -137,11 +195,25 @@ void ProtocolController::MouseMove()
     this->cursorController->setX(QCursor::pos().x());
     this->cursorController->setY(QCursor::pos().y());
     if(this->perturbation)
-        this->cursorController->RotatePoint();
+        this->cursorController->RotatePoint();    
     this->mutex->unlock();
 }
 
-//Creates a header file
+void ProtocolController::saveData()
+{
+    QString datafile = this->fileprefix + "_data_" +
+            QString::number(this->sessionCounter) +
+            "_" + QString::number(this->trialCounter) + ".txt";
+    this->fileController = new DataFileController(datafile.toStdString());
+    this->fileController->Open();
+    for(int i=0; i<vData.size(); i++)
+        this->fileController->WriteData(vData.at(i));
+    this->fileController->Close();
+    this->trialCounter++;
+    this->vData.clear();
+}
+
+//Creates the header file for the experiment
 void ProtocolController::writeHeader()
 {
     QString headername = fileprefix + "_header.txt";
@@ -159,7 +231,11 @@ void ProtocolController::writeHeader()
         header += "---------------------------------------------\n";
         header += "Details of the experimental protocol\n";
         header += "Number of sessions: " + QString::number(this->numberSessions) + "\n";
-        header += "Number of trials: " + QString::number(this->numberTrials) + "\n";
+        header += "Number of trials: " + QString::number(this->numberTrials) + "\n";        
+        header += "Sampling frequency (Hz): " + QString::number(1000) + "\n";
+        header += "Monitor width (pixels) : " + QString::number(this->parent->geometry().width()) + "\n";
+        header += "Monitor height (pixels) : " + QString::number(this->parent->geometry().height()) + "\n";
+        header += "---------------------------------------------\n";
         fileController->WriteData(header);
         fileController->Close();
     }

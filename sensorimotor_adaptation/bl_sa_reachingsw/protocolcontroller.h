@@ -22,11 +22,10 @@
 #include <QMutex> //Handles multi-threading
 #include <QTimer> //Timer for saving data
 #include <QMutex> //Necessary for handling multiple acess
-#include <vector>
+#include <QVector> //Dynamic array
 #include "datafilecontroller.h" //Imports the class that saves the experiment data
 #include "cursorcontroller.h" //Handles the mouse cursor
 #include "guiobject.h" //Defines the objects to be drawn in the GUI
-
 
 
 class ProtocolController : public QObject
@@ -37,11 +36,11 @@ public:
     //-----------------------------------------------------------------
     //Constructors
     ProtocolController(QWidget *p);
-    //~ProtocolController();
+    ~ProtocolController();
     //-----------------------------------------------------------------
     //-----------------------------------------------------------------
     //Methods    
-    std::vector<GUIObject*> updateGUI();
+    QVector<GUIObject*> updateGUI();
     void MouseMove();
     //-----------------------------------------------------------------
     //-----------------------------------------------------------------
@@ -49,6 +48,12 @@ public:
 
 public slots:
     void timerTick(); //Method evoked by the timer    
+
+signals:
+    //Starts the timer
+    void start();
+    //Stops the timer
+    void stop();
 
 private:
     //Consts
@@ -61,14 +66,14 @@ private:
     //Distance from center to target
     const int distanceTarget = 500;
     //Height of the target
-    const int objHeight = 30;
+    const int objHeight = 50;
     //Width of the target
-    const int objWidth = 30;
+    const int objWidth = 50;
     const int cursorWidth = 20;
     const int cursorHeight = 20;
     //Defines the session
     const bool perturbation = true;
-    const int perturbationDegree = 15;
+    const int perturbationDegree = 20;
     //Filename prefix
     const QString fileprefix = "andrei_nakagawa";
     //Objects
@@ -82,6 +87,8 @@ private:
     //Methods
     //Method that updates what needs to be drawn in the GUI
     void writeHeader();
+    void saveData();
+    void Initialize();
     //Properties    
     int centerX;
     int centerY;
@@ -89,6 +96,10 @@ private:
     int originY;
     int targetX;
     int targetY;
+    int trialCounter;
+    int sessionCounter;
+    bool flagRecord = false;
+    QVector<QString> vData;
 };
 
 #endif // PROTOCOLCONTROLLER_H
