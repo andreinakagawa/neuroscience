@@ -12,6 +12,7 @@
 
 #include "guiobject.h"
 
+//Default constructor
 GUIObject::GUIObject()
 {
     this->width = 20;
@@ -21,22 +22,32 @@ GUIObject::GUIObject()
     this->type = this->Ellipse;
 }
 
+//Destructor
 GUIObject::~GUIObject()
 {
-    free(this->point);
-    free(this->pen);
+    //Frees the allocated pointers
+    free(this->point); //QPointF
+    free(this->pen); //QPen
+    free(this->paintColor); //QColor
 }
 
+//Method that determines whether another GUIObject
+//has collided with the current object
 bool GUIObject::HasCollided(GUIObject* _obj)
 {
     //Measuring the Euclidean Distance
     double distance = this->EuclideanDistance(_obj);
+    //The object has collided if the distance between
+    //the two objects is inferior to the sum of
+    //the objects' radius
     if(distance < (this->width+_obj->width))
         return true;
     else
         return false;
 }
 
+//Method that measures the Euclidean distance between
+//the current object and another GUIObject
 double GUIObject::EuclideanDistance(GUIObject* _obj)
 {
     double x = (double)this->point->x() - (double)_obj->point->x();
