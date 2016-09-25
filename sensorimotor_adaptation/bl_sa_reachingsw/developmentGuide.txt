@@ -17,6 +17,7 @@ hits the target (anywhere)
 - a method that saves the experiment data
 - save each trial separately
 - display a message during rest
+- perhaps, a new class should be developed that only handles the experiment according to the protocol parameters
 
 reachingwindow:
 - needs to initialize the experimental protocol
