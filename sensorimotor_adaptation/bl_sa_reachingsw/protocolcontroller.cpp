@@ -72,9 +72,6 @@ void ProtocolController::Initialize()
     connect(this,SIGNAL(stop()),this->timer,SLOT(stop()),
             Qt::QueuedConnection);
 
-    //Writes the header file
-    this->writeHeader();
-
     //Initializes the cursor controller
     this->cursorController = new CursorController();
     if(this->perturbation)
@@ -86,6 +83,32 @@ void ProtocolController::Initialize()
 
     this->trialCounter=1;
     this->sessionCounter=1;
+
+    double x=0;
+    double y=0;
+
+    this->objOrigin = new GUIObject();
+    x = this->originX;
+    y = this->originY;
+    this->objOrigin->point = new QPointF(x,y);
+    this->objOrigin->pen = new QPen(Qt::blue);
+    this->objOrigin->pen->setWidth(0);
+    this->objOrigin->width = this->objWidth;
+    this->objOrigin->height = this->objHeight;
+    this->objOrigin->type = GUIObject::Ellipse;
+
+    this->objTarget = new GUIObject();
+    x = this->targetX;
+    y = this->targetY;
+    this->objTarget->point = new QPointF(x,y);
+    this->objTarget->pen = new QPen(Qt::red);
+    this->objTarget->pen->setWidth(0);
+    this->objTarget->width = this->objWidth;
+    this->objTarget->height = this->objHeight;
+    this->objTarget->type = GUIObject::Ellipse;
+
+    //Writes the header file
+    this->writeHeader();
 
     QCursor::setPos(this->originX,this->originY);
 }
@@ -111,34 +134,16 @@ QVector<GUIObject*> ProtocolController::updateGUI()
     double x=0;
     double y=0;
 
-    //Creates the origin marker
-    GUIObject* objOrigin = new GUIObject();
-    x = this->originX - (this->objWidth/2.0);
-    y = this->originY - (this->objHeight/2.0);
-    objOrigin->point = new QPointF(x,y);
-    objOrigin->pen = new QPen(Qt::blue);
-    objOrigin->pen->setWidth(0);
-    objOrigin->width = this->objWidth;
-    objOrigin->height = this->objHeight;
-    objOrigin->type = GUIObject::Rectangle;
-    vobj.push_back(objOrigin);
+    //Creates the origin marker   
+    vobj.push_back(this->objOrigin);
 
-    //Creates the target marker
-    GUIObject* objTarget = new GUIObject();
-    x = this->targetX - (this->objWidth/2.0);
-    y = this->targetY - (this->objHeight/2.0);
-    objTarget->point = new QPointF(x,y);
-    objTarget->pen = new QPen(Qt::red);
-    objTarget->pen->setWidth(0);
-    objTarget->width = this->objWidth;
-    objTarget->height = this->objHeight;
-    objTarget->type = GUIObject::Rectangle;
-    vobj.push_back(objTarget);
+    //Creates the target marker   
+    vobj.push_back(this->objTarget);
 
     //Creates an object that represents the mouse cursor
     GUIObject *objMouseCursor = new GUIObject();
-    x = QCursor::pos().x() - (this->cursorWidth/2.0);
-    y = QCursor::pos().y() - (this->cursorHeight/2.0);
+    x = QCursor::pos().x();
+    y = QCursor::pos().y();
     objMouseCursor->point = new QPointF(x,y);
     objMouseCursor->pen = new QPen(Qt::yellow);
     objMouseCursor->pen->setWidth(0);
@@ -150,8 +155,8 @@ QVector<GUIObject*> ProtocolController::updateGUI()
     //Creates an object that represents the visual feedback
     //Can be different from the actual mouse movement
     GUIObject *objFeedbackCursor = new GUIObject();
-    x = this->cursorController->x() - (this->cursorWidth/2.0);
-    y = this->cursorController->y() - (this->cursorHeight/2.0);
+    x = this->cursorController->x() ;
+    y = this->cursorController->y();
     objFeedbackCursor->point = new QPointF(x,y);
     objFeedbackCursor->pen = new QPen(Qt::green);
     objFeedbackCursor->pen->setWidth(0);
@@ -171,21 +176,26 @@ QVector<GUIObject*> ProtocolController::updateGUI()
     //target. In this case, the data acquisition is stopped
     //and saved in a file
     else if(objFeedbackCursor->HasCollided(objTarget) && flagRecord==true)
-    {        
-        emit this->stop();
-        this->saveData();
+    {
         this->flagRecord=false;
+        emit this->stop();
+        this->saveData();        
+        this->vData.clear();
     }
 
     return vobj;
 }
 
+//Saves the samples from the visual feedback
 void ProtocolController::timerTick()
 {
     this->mutex->lock();
-    QString val = QString::number(QCursor::pos().x()) + "\t" +
-            QString::number(QCursor::pos().y());
-    vData.push_back(val);
+    if(this->flagRecord)
+    {
+        QString val = QString::number(this->cursorController->x()) + "\t" +
+                QString::number(this->cursorController->y());
+        vData.push_back(val);
+    }
     this->mutex->unlock();
 }
 
@@ -225,17 +235,36 @@ void ProtocolController::writeHeader()
         header += "Federal University of Uberlandia - Brazil\n";
         header += "Biomedical Engineering Lab\n";
         header += "---------------------------------------------\n";
-        header += "Sensorimotor Adaptation Task\n";
+        header += "Visuomotor Adaptation Task\n";
         header += "Date: " + QDate::currentDate().toString("dd/MM/yyyy")
                 + " - " + QTime::currentTime().toString() + "\n";
         header += "---------------------------------------------\n";
-        header += "Details of the experimental protocol\n";
+        header += "Details of the experiment\n";
         header += "Number of sessions: " + QString::number(this->numberSessions) + "\n";
         header += "Number of trials: " + QString::number(this->numberTrials) + "\n";        
-        header += "Sampling frequency (Hz): " + QString::number(1000) + "\n";
+        header += "Sampling frequency (Hz): " + QString::number(this->samplingFrequency) + "\n";
         header += "Monitor width (pixels) : " + QString::number(this->parent->geometry().width()) + "\n";
         header += "Monitor height (pixels) : " + QString::number(this->parent->geometry().height()) + "\n";
+        header += "Perturbation:  ";
+        if(this->perturbation)
+            header += "Yes\n";
+        else
+            header += "No\n";
+        header += "Perturbation degree: " + QString::number(this->perturbationDegree) + "\n";
         header += "---------------------------------------------\n";
+        header += "Task parameters\n";
+        header += "Number of targets: " + QString::number(this->numberTargets) + "\n";
+        header += "Center of target in X: " + QString::number(this->objTarget->point->x()) + "\n";
+        header += "Center of target in Y: " + QString::number(this->objTarget->point->y()) + "\n";
+        header += "Target width: " + QString::number(this->objWidth) + "\n";
+        header += "Target height: " + QString::number(this->objHeight) + "\n";
+        header += "-------------------------------------\n";
+        header += "Origin\n";
+        header += "Center of Origin in X: " + QString::number(this->objOrigin->point->x()) + "\n";
+        header += "Center of Origin in Y: " + QString::number(this->objOrigin->point->y()) + "\n";
+        header += "Origin width: " + QString::number(this->objWidth) + "\n";
+        header += "Origin height: " + QString::number(this->objHeight) + "\n";
+        header += "-------------------------------------\n";
         fileController->WriteData(header);
         fileController->Close();
     }

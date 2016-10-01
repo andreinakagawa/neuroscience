@@ -63,12 +63,14 @@ private:
     const int numberTrials = 30;
     //Total number of sessions
     const int numberSessions = 1;
+    //Number of targets
+    const int numberTargets = 1;
     //Distance from center to target
     const int distanceTarget = 500;
     //Height of the target
-    const int objHeight = 50;
+    const int objHeight = 30;
     //Width of the target
-    const int objWidth = 50;
+    const int objWidth = 30;
     const int cursorWidth = 20;
     const int cursorHeight = 20;
     //Defines the session
@@ -83,7 +85,8 @@ private:
     QMutex* mutex;
     QTimer *timer;
     QThread *workerThread;
-    GUIObject* gui;
+    GUIObject* objTarget;
+    GUIObject* objOrigin;
     //Methods
     //Method that updates what needs to be drawn in the GUI
     void writeHeader();
