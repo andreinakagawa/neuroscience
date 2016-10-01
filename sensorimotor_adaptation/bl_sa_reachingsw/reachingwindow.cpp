@@ -42,12 +42,12 @@ void ReachingWindow::paintEvent(QPaintEvent *e)
     QPainter painter(this);
     QVector<GUIObject*> vGUIObjects = this->protocolController->updateGUI();
     for(int i=0; i<vGUIObjects.size(); i++)
-    {
+    {        
         painter.setPen(*vGUIObjects.at(i)->pen);
         painter.setBrush(vGUIObjects.at(i)->pen->color());
         switch(vGUIObjects.at(i)->type)
         {
-            case GUIObject::Ellipse:
+            case GUIObject::Ellipse:            
             painter.drawEllipse(*vGUIObjects.at(i)->point,
                                 vGUIObjects.at(i)->width,vGUIObjects.at(i)->height);
             break;
