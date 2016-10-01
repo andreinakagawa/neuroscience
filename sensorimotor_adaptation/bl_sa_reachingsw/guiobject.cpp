@@ -40,7 +40,7 @@ bool GUIObject::HasCollided(GUIObject* _obj)
     //The object has collided if the distance between
     //the two objects is inferior to the sum of
     //the objects' radius
-    if(distance < (this->width+_obj->width))
+    if(distance <= this->width+_obj->width)
         return true;
     else
         return false;
