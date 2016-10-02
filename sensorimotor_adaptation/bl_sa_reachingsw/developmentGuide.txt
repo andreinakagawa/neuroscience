@@ -19,6 +19,10 @@ hits the target (anywhere)
 - display a message during rest
 - perhaps, a new class should be developed that only handles the experiment according to the protocol parameters
 
+guiobject:
+- change the GUIObject to create ellipses only
+- handle everything in terms of x and y positions and radius
+
 reachingwindow:
 - needs to initialize the experimental protocol
 - trigger a paint event. the procotol controller generates the object
