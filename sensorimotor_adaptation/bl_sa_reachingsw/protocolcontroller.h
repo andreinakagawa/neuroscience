@@ -71,8 +71,8 @@ private:
     const int objHeight = 30;
     //Width of the target
     const int objWidth = 30;
-    const int cursorWidth = 20;
-    const int cursorHeight = 20;
+    const int cursorWidth = 15;
+    const int cursorHeight = 15;
     //Defines the session
     const bool perturbation = true;
     const int perturbationDegree = 20;

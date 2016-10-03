@@ -167,19 +167,19 @@ QVector<GUIObject*> ProtocolController::updateGUI()
 
     //Checks if the visual feedback cursor has collided with the origin
     //In this case, the data acquisition is initiated
-    if(objFeedbackCursor->HasCollided(objOrigin) && flagRecord==false)
-    {        
+    if(objFeedbackCursor->HasCollidedCenter(objOrigin) && flagRecord==false)
+    {                
         emit this->start();
         this->flagRecord=true;
     }
     //Checks if the visual feedback cursor has collided with the
     //target. In this case, the data acquisition is stopped
     //and saved in a file
-    else if(objFeedbackCursor->HasCollided(objTarget) && flagRecord==true)
-    {
+    else if(objFeedbackCursor->HasCollidedCenter(objTarget) && flagRecord==true)
+    {        
         this->flagRecord=false;
         emit this->stop();
-        this->saveData();        
+        this->saveData();
         this->vData.clear();
     }
 
@@ -227,8 +227,8 @@ void ProtocolController::saveData()
 void ProtocolController::writeHeader()
 {
     QString headername = fileprefix + "_header.txt";
-    fileController = new DataFileController(headername.toStdString());
-    if(fileController->Open())
+    this->fileController = new DataFileController(headername.toStdString());
+    if(this->fileController->Open())
     {
         QString header = "";
 
@@ -243,21 +243,16 @@ void ProtocolController::writeHeader()
         header += "Number of sessions: " + QString::number(this->numberSessions) + "\n";
         header += "Number of trials: " + QString::number(this->numberTrials) + "\n";        
         header += "Sampling frequency (Hz): " + QString::number(this->samplingFrequency) + "\n";
-        header += "Monitor width (pixels) : " + QString::number(this->parent->geometry().width()) + "\n";
-        header += "Monitor height (pixels) : " + QString::number(this->parent->geometry().height()) + "\n";
-        header += "Perturbation:  ";
+        header += "Monitor width (pixels): " + QString::number(this->parent->geometry().width()) + "\n";
+        header += "Monitor height (pixels): " + QString::number(this->parent->geometry().height()) + "\n";
+        header += "Perturbation: ";
         if(this->perturbation)
             header += "Yes\n";
         else
             header += "No\n";
         header += "Perturbation degree: " + QString::number(this->perturbationDegree) + "\n";
-        header += "---------------------------------------------\n";
+        header += "---------------------------------------------\n";        
         header += "Task parameters\n";
-        header += "Number of targets: " + QString::number(this->numberTargets) + "\n";
-        header += "Center of target in X: " + QString::number(this->objTarget->point->x()) + "\n";
-        header += "Center of target in Y: " + QString::number(this->objTarget->point->y()) + "\n";
-        header += "Target width: " + QString::number(this->objWidth) + "\n";
-        header += "Target height: " + QString::number(this->objHeight) + "\n";
         header += "-------------------------------------\n";
         header += "Origin\n";
         header += "Center of Origin in X: " + QString::number(this->objOrigin->point->x()) + "\n";
@@ -265,7 +260,13 @@ void ProtocolController::writeHeader()
         header += "Origin width: " + QString::number(this->objWidth) + "\n";
         header += "Origin height: " + QString::number(this->objHeight) + "\n";
         header += "-------------------------------------\n";
-        fileController->WriteData(header);
-        fileController->Close();
+        header += "Number of targets: " + QString::number(this->numberTargets) + "\n";
+        header += "Center of target in X: " + QString::number(this->objTarget->point->x()) + "\n";
+        header += "Center of target in Y: " + QString::number(this->objTarget->point->y()) + "\n";
+        header += "Target width: " + QString::number(this->objWidth) + "\n";
+        header += "Target height: " + QString::number(this->objHeight) + "\n";
+        header += "-------------------------------------\n";
+        this->fileController->WriteData(header);
+        this->fileController->Close();
     }
 }
