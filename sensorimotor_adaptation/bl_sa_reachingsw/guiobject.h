@@ -28,10 +28,13 @@ public:
     //Methods
     //Determines whether another GUIObject has
     //collided with the current object
-    bool HasCollided(GUIObject* _obj);
+    bool HasCollided(GUIObject *_obj);
+    //Determines whether another GUIObject has
+    //collided with the center of the current object
+    bool HasCollidedCenter(GUIObject *_obj);
     //Measures the euclidean distance between
     //the current object and another GUIObject
-    double EuclideanDistance(GUIObject* _obj);
+    double EuclideanDistance(GUIObject *_obj);
 
     //Properties
     //Determines the parameters of the QPen object

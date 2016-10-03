@@ -46,6 +46,18 @@ bool GUIObject::HasCollided(GUIObject* _obj)
         return false;
 }
 
+//Method that determines whether another GUIObject
+//has collided with the center of the current object
+bool GUIObject::HasCollidedCenter(GUIObject *_obj)
+{
+    //Measuring the Euclidean Distance
+    double distance = this->EuclideanDistance(_obj);
+    if(distance <= _obj->width/2.0)
+        return true;
+    else
+        return false;
+}
+
 //Method that measures the Euclidean distance between
 //the current object and another GUIObject
 double GUIObject::EuclideanDistance(GUIObject* _obj)
