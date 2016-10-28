@@ -18,11 +18,6 @@
 ProtocolController::ProtocolController(QWidget *p)
 {
     this->parent = p;
-    this->Initialize();
-}
-
-void ProtocolController::Initialize()
-{
     //Sets the background color of the form
     //Default: black
     this->parent->setStyleSheet("background-color: black;");
@@ -33,84 +28,93 @@ void ProtocolController::Initialize()
     this->parent->setCursor(Qt::BlankCursor);
     //Enables mouse tracking
     this->parent->setMouseTracking(true);
+    //this->Initialize();
+}
 
-    //Defines the center of the screen
-    this->centerX = this->parent->geometry().width()/2;
-    this->centerY = this->parent->geometry().height()/2;
-
-    //Defines the position of the origin
-    this->originX = this->centerX - this->distanceTarget;
-    this->originY = this->centerY;
-
-    //Defines the position of the target
-    this->targetX = this->centerX + this->distanceTarget;
-    this->targetY = this->centerY;
-
-    //Sets the cursor to the center of the screen
-    QCursor::setPos(this->centerX,this->centerY);
-
-    //Creates a new mutex
-    this->mutex = new QMutex();
-    //Creates a new thread
-    this->workerThread = new QThread;
-    //Starts the thread
-    this->workerThread->start();
-    //Creates a new timer
-    this->timer = new QTimer(0);
-    //Precise timer is prefered
-    this->timer->setTimerType(Qt::PreciseTimer);
-    //Finds the timer interval (ms) according to the sampling frequency
-    int interval = (int)(1000 * (1.0 / ((double)this->samplingFrequency)));
-    this->timer->setInterval(interval);
-    //Connects the timer to the processing event
-    connect(this->timer,SIGNAL(timeout()),this,SLOT(timerTick()));
-    //Moves the protocol controller to a different Thread
-    this->timer->moveToThread(workerThread);
-
-    connect(this,SIGNAL(start()),this->timer,SLOT(start()),
-            Qt::QueuedConnection);
-    connect(this,SIGNAL(stop()),this->timer,SLOT(stop()),
-            Qt::QueuedConnection);
-
-    //Initializes the cursor controller
-    this->cursorController = new CursorController();
-    if(this->perturbation)
+void ProtocolController::Initialize()
+{
+    if(!this->initialized)
     {
-        this->cursorController->setPerturbation(this->perturbationDegree);
-        this->cursorController->setOriginX(this->originX);
-        this->cursorController->setOriginY(this->originY);
+        //Defines the center of the screen
+        this->centerX = this->parent->geometry().width()/2;
+        this->centerY = this->parent->geometry().height()/2;
+
+        //Defines the position of the origin
+        this->originX = this->centerX - this->distanceTarget;
+        this->originY = this->centerY;
+
+        //Defines the position of the target
+        this->targetX = this->centerX + this->distanceTarget;
+        this->targetY = this->centerY;
+
+        //Sets the cursor to the center of the screen
+        QCursor::setPos(this->centerX,this->centerY);
+
+        //Creates a new mutex
+        this->mutex = new QMutex();
+        //Creates a new thread
+        this->workerThread = new QThread;
+        //Starts the thread
+        this->workerThread->start();
+        //Creates a new timer
+        this->timer = new QTimer(0);
+        //Precise timer is prefered
+        this->timer->setTimerType(Qt::PreciseTimer);
+        //Finds the timer interval (ms) according to the sampling frequency
+        int interval = (int)(1000 * (1.0 / ((double)this->samplingFrequency)));
+        this->timer->setInterval(interval);
+        //Connects the timer to the processing event
+        connect(this->timer,SIGNAL(timeout()),this,SLOT(timerTick()));
+        //Moves the protocol controller to a different Thread
+        this->timer->moveToThread(workerThread);
+
+        connect(this,SIGNAL(start()),this->timer,SLOT(start()),
+                Qt::QueuedConnection);
+        connect(this,SIGNAL(stop()),this->timer,SLOT(stop()),
+                Qt::QueuedConnection);
+
+        //Initializes the cursor controller
+        this->cursorController = new CursorController();
+        if(this->perturbation)
+        {
+            this->cursorController->setPerturbation(this->perturbationDegree);
+            this->cursorController->setOriginX(this->originX);
+            this->cursorController->setOriginY(this->originY);
+        }
+
+        this->trialCounter=1;
+        this->sessionCounter=1;
+
+        double x=0;
+        double y=0;
+
+        this->objOrigin = new GUIObject();
+        x = this->originX;
+        y = this->originY;
+        this->objOrigin->point = new QPointF(x,y);
+        this->objOrigin->pen = new QPen(Qt::blue);
+        this->objOrigin->pen->setWidth(0);
+        this->objOrigin->width = this->objWidth;
+        this->objOrigin->height = this->objHeight;
+        this->objOrigin->type = GUIObject::Ellipse;
+
+        this->objTarget = new GUIObject();
+        x = this->targetX;
+        y = this->targetY;
+        this->objTarget->point = new QPointF(x,y);
+        this->objTarget->pen = new QPen(Qt::red);
+        this->objTarget->pen->setWidth(0);
+        this->objTarget->width = this->objWidth;
+        this->objTarget->height = this->objHeight;
+        this->objTarget->type = GUIObject::Ellipse;
+
+        //Writes the header file
+        this->writeHeader();
+
+        QCursor::setPos(this->originX,this->originY);
+
+        this->initialized = true;
     }
-
-    this->trialCounter=1;
-    this->sessionCounter=1;
-
-    double x=0;
-    double y=0;
-
-    this->objOrigin = new GUIObject();
-    x = this->originX;
-    y = this->originY;
-    this->objOrigin->point = new QPointF(x,y);
-    this->objOrigin->pen = new QPen(Qt::blue);
-    this->objOrigin->pen->setWidth(0);
-    this->objOrigin->width = this->objWidth;
-    this->objOrigin->height = this->objHeight;
-    this->objOrigin->type = GUIObject::Ellipse;
-
-    this->objTarget = new GUIObject();
-    x = this->targetX;
-    y = this->targetY;
-    this->objTarget->point = new QPointF(x,y);
-    this->objTarget->pen = new QPen(Qt::red);
-    this->objTarget->pen->setWidth(0);
-    this->objTarget->width = this->objWidth;
-    this->objTarget->height = this->objHeight;
-    this->objTarget->type = GUIObject::Ellipse;
-
-    //Writes the header file
-    this->writeHeader();
-
-    QCursor::setPos(this->originX,this->originY);
 }
 
 ProtocolController::~ProtocolController()

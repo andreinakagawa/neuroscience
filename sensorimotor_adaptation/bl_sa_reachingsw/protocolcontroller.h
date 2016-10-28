@@ -42,6 +42,7 @@ public:
     //Methods    
     QVector<GUIObject*> updateGUI();
     void MouseMove();
+    void Initialize();
     //-----------------------------------------------------------------
     //-----------------------------------------------------------------
 
@@ -90,8 +91,7 @@ private:
     //Methods
     //Method that updates what needs to be drawn in the GUI
     void writeHeader();
-    void saveData();
-    void Initialize();
+    void saveData();    
     //Properties    
     int centerX;
     int centerY;
@@ -102,6 +102,7 @@ private:
     int trialCounter;
     int sessionCounter;
     bool flagRecord = false;
+    bool initialized = false;
     QVector<QString> vData;
 };
 

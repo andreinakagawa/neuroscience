@@ -38,6 +38,8 @@ ReachingWindow::~ReachingWindow()
 
 void ReachingWindow::paintEvent(QPaintEvent *e)
 {
+    this->protocolController->Initialize();
+
     //Painter
     QPainter painter(this);
     QVector<GUIObject*> vGUIObjects = this->protocolController->updateGUI();
