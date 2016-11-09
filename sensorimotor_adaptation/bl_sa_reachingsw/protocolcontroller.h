@@ -67,7 +67,7 @@ private:
     //Number of targets
     const int numberTargets = 1;
     //Distance from center to target
-    const int distanceTarget = 500;
+    const int distanceTarget = 300;
     //Height of the target
     const int objHeight = 30;
     //Width of the target
@@ -78,7 +78,7 @@ private:
     const bool perturbation = true;
     const int perturbationDegree = 20;
     //Filename prefix
-    const QString fileprefix = "andrei_nakagawa";
+    const QString fileprefix = "subject1";
     //Objects
     QWidget *parent;
     DataFileController *fileController;

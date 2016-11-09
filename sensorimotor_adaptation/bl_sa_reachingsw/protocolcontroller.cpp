@@ -40,12 +40,12 @@ void ProtocolController::Initialize()
         this->centerY = this->parent->geometry().height()/2;
 
         //Defines the position of the origin
-        this->originX = this->centerX - this->distanceTarget;
-        this->originY = this->centerY;
+        this->originX = this->centerX;
+        this->originY = this->centerY + this->distanceTarget;
 
         //Defines the position of the target
-        this->targetX = this->centerX + this->distanceTarget;
-        this->targetY = this->centerY;
+        this->targetX = this->centerX;
+        this->targetY = this->centerY - this->distanceTarget;
 
         //Sets the cursor to the center of the screen
         QCursor::setPos(this->centerX,this->centerY);
