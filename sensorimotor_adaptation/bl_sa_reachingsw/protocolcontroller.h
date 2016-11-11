@@ -76,7 +76,7 @@ private:
     const int cursorHeight = 15;
     //Defines the session
     const bool perturbation = true;
-    const int perturbationDegree = 20;
+    const int perturbationDegree = 30;
     //Filename prefix
     const QString fileprefix = "subject1";
     //Objects
