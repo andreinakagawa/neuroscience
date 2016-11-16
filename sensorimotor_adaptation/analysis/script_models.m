@@ -10,7 +10,7 @@
 % Based on the slides from Dr. Robert van Beers, lectured in CoSMo 2015
 %--------------------------------------------------------------------------
 %Number of trials
-N = 400;
+N = 300;
 %Trials
 trials = 1:N;
 %Perturbation
@@ -21,7 +21,7 @@ deg = 30;
 %Perturbation
 perturbation = zeros(1,N);
 perturbation(i0:i1) = deg;
-perturbation(301:400) = deg;
+%perturbation(301:400) = deg;
 %--------------------------------------------------------------------------
 %simple model
 %x(i+1) = x(i) + Be(i)
@@ -76,26 +76,46 @@ end
 %--------------------------------------------------------------------------
 %Plots
 figure();
-plot(trials,perturbation,'k');
+plot(trials,perturbation,'k','LineWidth',2);
 hold on;
-plot(trials,x,'r'); %Simple model
-plot(trials,xss,'g'); %Single state
-plot(trials,xts,'b'); %Two-state
-legend('Perturbation','Simple model','Single-state model','Two-state model');
+plot(trials,x,'r','LineWidth',2); %Simple model
+plot(trials,xss,'g','LineWidth',2); %Single state
+plot(trials,xts,'b','LineWidth',2); %Two-state
+set(gca,'FontSize',12);
+legend('Perturbation','Simple model','1-state model','2-state model',...
+'location','northeastoutside');
 ylim([-0.5, deg+5]);
 xlim([min(trials),max(trials)]);
 title('Sensorimotor adaptation');
 xlabel('Trials');
 ylabel('Direction (deg)');
-
+%--------------------------------------------------------------------------
+%Plotting the two-state space model alone
 figure();
-plot(trials,xts,'b'); %Two-state model -> net adaptation
+plot(trials,perturbation,'k','LineWidth',2);
 hold on;
-plot(trials,x1ts,'g'); %Two-state model -> fast process
-plot(trials,x2ts,'r'); %Two-state model -> slow process
-legend('Two-state model', 'Fast process', 'Slow process');
-ylim([-0.5, deg+5]);
+plot(trials,xts,'b','LineWidth',2); %Two-state model -> net adaptation
+plot(trials,x1ts,'g','LineWidth',2); %Two-state model -> fast process
+plot(trials,x2ts,'r','LineWidth',2); %Two-state model -> slow process
+set(gca,'FontSize',12);
+legend('Perturbation','2-state model', 'Fast process', 'Slow process',...
+'location','northeastoutside');
+%ylim([-0.5, deg+5]);
 xlim([min(trials),max(trials)]);
 title('Sensorimotor adaptation');
 xlabel('Trials');
 ylabel('Direction (deg)');
+%--------------------------------------------------------------------------
+%Plotting the error curve
+figure();
+plot(trials,(perturbation-x),'r','LineWidth',2);
+hold on;
+plot(trials,(perturbation-xss),'g','LineWidth',2);
+plot(trials,(perturbation-xts),'b','LineWidth',2);
+set(gca,'FontSize',12);
+legend('Simple model','1-state model','2-state model',...
+'location','northeastoutside');
+title('Sensorimotor adaptation - Performance');
+xlabel('Trials');
+ylabel('Error (deg)');
+%--------------------------------------------------------------------------
