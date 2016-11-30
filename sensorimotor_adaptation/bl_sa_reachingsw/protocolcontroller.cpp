@@ -28,6 +28,16 @@ ProtocolController::ProtocolController(QWidget *p)
     this->parent->setCursor(Qt::BlankCursor);
     //Enables mouse tracking
     this->parent->setMouseTracking(true);
+
+    this->numberTrialsperSession = (int*)malloc(sizeof(int)*this->numberSessions);
+    this->numberTrialsperSession[0] = 2;
+    this->numberTrialsperSession[1] = 2;
+    this->numberTrialsperSession[2] = 2;
+
+    this->perturbationSession = (bool*)malloc(sizeof(bool)*this->numberSessions);
+    this->perturbationSession[0] = false;
+    this->perturbationSession[1] = true;
+    this->perturbationSession[2] = false;
     //this->Initialize();
 }
 
@@ -68,6 +78,7 @@ void ProtocolController::Initialize()
         //Moves the protocol controller to a different Thread
         this->timer->moveToThread(workerThread);
 
+        //Connects events to the timer
         connect(this,SIGNAL(start()),this->timer,SLOT(start()),
                 Qt::QueuedConnection);
         connect(this,SIGNAL(stop()),this->timer,SLOT(stop()),
@@ -82,12 +93,16 @@ void ProtocolController::Initialize()
             this->cursorController->setOriginY(this->originY);
         }
 
-        this->trialCounter=1;
+        //Counter for the number of trials
+        this->trialCounter=0;
+        //Counter for the number of sessions
         this->sessionCounter=1;
 
+        //Aux variables
         double x=0;
         double y=0;
 
+        //Creates the object representing the origin
         this->objOrigin = new GUIObject();
         x = this->originX;
         y = this->originY;
@@ -98,6 +113,7 @@ void ProtocolController::Initialize()
         this->objOrigin->height = this->objHeight;
         this->objOrigin->type = GUIObject::Ellipse;
 
+        //Creates the object representing the target
         this->objTarget = new GUIObject();
         x = this->targetX;
         y = this->targetY;
@@ -117,6 +133,7 @@ void ProtocolController::Initialize()
     }
 }
 
+//Destructor
 ProtocolController::~ProtocolController()
 {
     if(this->flagRecord)
@@ -124,6 +141,8 @@ ProtocolController::~ProtocolController()
     free(this->timer);
     free(this->fileController);
     free(this->cursorController);
+    free(this->numberTrialsperSession);
+    free(this->perturbationSession);
     free(this->mutex);
     this->workerThread->deleteLater();
     free(this->workerThread);
@@ -143,18 +162,6 @@ QVector<GUIObject*> ProtocolController::updateGUI()
 
     //Creates the target marker   
     vobj.push_back(this->objTarget);
-
-    //Creates an object that represents the mouse cursor
-    GUIObject *objMouseCursor = new GUIObject();
-    x = QCursor::pos().x();
-    y = QCursor::pos().y();
-    objMouseCursor->point = new QPointF(x,y);
-    objMouseCursor->pen = new QPen(Qt::yellow);
-    objMouseCursor->pen->setWidth(0);
-    objMouseCursor->width = this->cursorWidth;
-    objMouseCursor->height = this->cursorHeight;
-    objMouseCursor->type = GUIObject::Ellipse;
-    vobj.push_back(objMouseCursor);
 
     //Creates an object that represents the visual feedback
     //Can be different from the actual mouse movement
@@ -203,13 +210,22 @@ void ProtocolController::timerTick()
     this->mutex->unlock();
 }
 
+//Updates the visual feedback of the cursor according to mouse position
+//If the perturbation is activated, then the visual feedback will be
+//deviated
 void ProtocolController::MouseMove()
 {
     this->mutex->lock();
+
+    //Gets the X and Y coordinates of the cursor
     this->cursorController->setX(QCursor::pos().x());
     this->cursorController->setY(QCursor::pos().y());
-    if(this->perturbation)
+    //Checks if the visual feedback should be perturbed
+    //and updates it
+    qDebug() << this->perturbationSession[this->sessionCounter-1];
+    if(this->perturbationSession[this->sessionCounter-1])
         this->cursorController->RotatePoint();    
+
     this->mutex->unlock();
 }
 
@@ -217,14 +233,27 @@ void ProtocolController::saveData()
 {
     QString datafile = this->fileprefix + "_data_" +
             QString::number(this->sessionCounter) +
-            "_" + QString::number(this->trialCounter) + ".txt";
+            "_" + QString::number(this->trialCounter+1) + ".txt";
     this->fileController = new DataFileController(datafile.toStdString());
     this->fileController->Open();
     for(int i=0; i<vData.size(); i++)
         this->fileController->WriteData(vData.at(i));
     this->fileController->Close();
     this->trialCounter++;
+
+    if(this->trialCounter >= this->numberTrialsperSession[this->sessionCounter-1])
+    {
+        this->trialCounter=0;
+        this->sessionCounter++;
+    }
+
+    if(this->sessionCounter > this->numberSessions)
+    {
+        this->parent->close();
+    }
+
     this->vData.clear();
+    QCursor::setPos(this->originX,this->originY);
 }
 
 //Creates the header file for the experiment

@@ -40,8 +40,11 @@ public:
     //-----------------------------------------------------------------
     //-----------------------------------------------------------------
     //Methods    
+    //Method that updates what needs to be drawn in the GUI
     QVector<GUIObject*> updateGUI();
+    //Mouse movement event
     void MouseMove();
+    //Initialize the protocol
     void Initialize();
     //-----------------------------------------------------------------
     //-----------------------------------------------------------------
@@ -61,13 +64,13 @@ private:
     //Sampling frequency (Hz)
     const int samplingFrequency = 500;
     //Total number of trials
-    const int numberTrials = 30;
+    const int numberTrials = 50;
     //Total number of sessions
-    const int numberSessions = 1;
+    const int numberSessions = 3;
     //Number of targets
     const int numberTargets = 1;
     //Distance from center to target
-    const int distanceTarget = 300;
+    const int distanceTarget = 400;
     //Height of the target
     const int objHeight = 30;
     //Width of the target
@@ -76,7 +79,9 @@ private:
     const int cursorHeight = 15;
     //Defines the session
     const bool perturbation = true;
-    const int perturbationDegree = 30;
+    const int perturbationDegree = 40;   
+    int* numberTrialsperSession;
+    bool* perturbationSession;
     //Filename prefix
     const QString fileprefix = "subject1";
     //Objects
@@ -88,8 +93,7 @@ private:
     QThread *workerThread;
     GUIObject* objTarget;
     GUIObject* objOrigin;
-    //Methods
-    //Method that updates what needs to be drawn in the GUI
+    //Methods    
     void writeHeader();
     void saveData();    
     //Properties    
