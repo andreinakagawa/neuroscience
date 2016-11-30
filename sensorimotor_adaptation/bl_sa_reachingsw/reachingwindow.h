@@ -42,6 +42,7 @@ public:
     void paintEvent(QPaintEvent *e); //Paint Event
     void mousePressEvent(QMouseEvent *e); //Mouse press event
     void mouseMoveEvent(QMouseEvent *e); //Mouse Move Event    
+    void experimentFinished(); //Method called when the experiment has finished
 
     //Properties
     std::vector<GUIObject> objVector;

@@ -37,8 +37,7 @@ ProtocolController::ProtocolController(QWidget *p)
     this->perturbationSession = (bool*)malloc(sizeof(bool)*this->numberSessions);
     this->perturbationSession[0] = false;
     this->perturbationSession[1] = true;
-    this->perturbationSession[2] = false;
-    //this->Initialize();
+    this->perturbationSession[2] = false;    
 }
 
 void ProtocolController::Initialize()
@@ -78,6 +77,11 @@ void ProtocolController::Initialize()
         //Moves the protocol controller to a different Thread
         this->timer->moveToThread(workerThread);
 
+        //Connects an event to the rest timer
+        this->timerRest = new QTimer(0);
+        this->timerRest->setInterval(this->restInterval);
+        connect(this->timerRest,SIGNAL(timeout()),this,SLOT(timerRestTick()));
+
         //Connects events to the timer
         connect(this,SIGNAL(start()),this->timer,SLOT(start()),
                 Qt::QueuedConnection);
@@ -102,7 +106,7 @@ void ProtocolController::Initialize()
         double x=0;
         double y=0;
 
-        //Creates the object representing the origin
+        //Creates the object representing the origin                
         this->objOrigin = new GUIObject();
         x = this->originX;
         y = this->originY;
@@ -114,15 +118,18 @@ void ProtocolController::Initialize()
         this->objOrigin->type = GUIObject::Ellipse;
 
         //Creates the object representing the target
+        this->targetColor = Qt::red;
         this->objTarget = new GUIObject();
         x = this->targetX;
         y = this->targetY;
         this->objTarget->point = new QPointF(x,y);
-        this->objTarget->pen = new QPen(Qt::red);
+        this->objTarget->pen = new QPen(this->targetColor);
         this->objTarget->pen->setWidth(0);
         this->objTarget->width = this->objWidth;
         this->objTarget->height = this->objHeight;
         this->objTarget->type = GUIObject::Ellipse;
+
+        this->objFeedbackCursor = new GUIObject();
 
         //Writes the header file
         this->writeHeader();
@@ -158,42 +165,48 @@ QVector<GUIObject*> ProtocolController::updateGUI()
     double y=0;
 
     //Creates the origin marker   
-    vobj.push_back(this->objOrigin);
+    vobj.push_back(this->objOrigin);    
 
-    //Creates the target marker   
+    //Creates the target marker
+    this->objTarget->pen = new QPen(this->targetColor);
+    this->objTarget->pen->setWidth(0);
     vobj.push_back(this->objTarget);
 
-    //Creates an object that represents the visual feedback
-    //Can be different from the actual mouse movement
-    GUIObject *objFeedbackCursor = new GUIObject();
-    x = this->cursorController->x() ;
-    y = this->cursorController->y();
-    objFeedbackCursor->point = new QPointF(x,y);
-    objFeedbackCursor->pen = new QPen(Qt::green);
-    objFeedbackCursor->pen->setWidth(0);
-    objFeedbackCursor->width = this->cursorWidth;
-    objFeedbackCursor->height = this->cursorHeight;
-    objFeedbackCursor->type = GUIObject::Ellipse;
+    if(this->flagFeedback)
+    {
+        //Creates an object that represents the visual feedback
+        //Can be different from the actual mouse movement
+        //GUIObject *objFeedbackCursor = new GUIObject();
+        x = this->cursorController->x() ;
+        y = this->cursorController->y();
+        objFeedbackCursor->point = new QPointF(x,y);
+        objFeedbackCursor->pen = new QPen(Qt::green);
+        objFeedbackCursor->pen->setWidth(0);
+        objFeedbackCursor->width = this->cursorWidth;
+        objFeedbackCursor->height = this->cursorHeight;
+        objFeedbackCursor->type = GUIObject::Ellipse;
+
+        //Checks if the visual feedback cursor has collided with the origin
+        //In this case, the data acquisition is initiated
+        if(objFeedbackCursor->HasCollidedCenter(objOrigin) && flagRecord==false)
+        {
+            emit this->start();
+            this->flagRecord=true;
+        }
+
+        //Checks if the visual feedback cursor has collided with the
+        //target. In this case, the data acquisition is stopped
+        //and saved in a file
+        else if(objFeedbackCursor->HasCollidedCenter(objTarget) && flagRecord==true)
+        {
+            this->flagRecord=false;
+            emit this->stop();
+            this->saveData();
+            this->vData.clear();
+        }
+    }
+
     vobj.push_back(objFeedbackCursor);
-
-    //Checks if the visual feedback cursor has collided with the origin
-    //In this case, the data acquisition is initiated
-    if(objFeedbackCursor->HasCollidedCenter(objOrigin) && flagRecord==false)
-    {                
-        emit this->start();
-        this->flagRecord=true;
-    }
-    //Checks if the visual feedback cursor has collided with the
-    //target. In this case, the data acquisition is stopped
-    //and saved in a file
-    else if(objFeedbackCursor->HasCollidedCenter(objTarget) && flagRecord==true)
-    {        
-        this->flagRecord=false;
-        emit this->stop();
-        this->saveData();
-        this->vData.clear();
-    }
-
     return vobj;
 }
 
@@ -208,6 +221,18 @@ void ProtocolController::timerTick()
         vData.push_back(val);
     }
     this->mutex->unlock();
+}
+
+void ProtocolController::timerRestTick()
+{
+    //Stops the timer to prevent it from firing again
+    this->timerRest->stop();
+    //Sets the cursor back to the origin
+    QCursor::setPos(this->originX,this->originY);
+    //Allows the drawing of the cursor
+    this->flagFeedback=true;
+    //Paints the target back to red
+    this->targetColor = Qt::red;
 }
 
 //Updates the visual feedback of the cursor according to mouse position
@@ -231,6 +256,7 @@ void ProtocolController::MouseMove()
 
 void ProtocolController::saveData()
 {
+    this->flagFeedback=false;
     QString datafile = this->fileprefix + "_data_" +
             QString::number(this->sessionCounter) +
             "_" + QString::number(this->trialCounter+1) + ".txt";
@@ -249,11 +275,15 @@ void ProtocolController::saveData()
 
     if(this->sessionCounter > this->numberSessions)
     {
+        QMessageBox msgBox;
+        msgBox.setText("The experiment has ended.");
+        msgBox.exec();
         this->parent->close();
     }
 
-    this->vData.clear();
-    QCursor::setPos(this->originX,this->originY);
+    this->timerRest->start();
+    this->targetColor = Qt::blue;
+    this->vData.clear();    
 }
 
 //Creates the header file for the experiment

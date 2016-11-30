@@ -23,6 +23,7 @@
 #include <QTimer> //Timer for saving data
 #include <QMutex> //Necessary for handling multiple acess
 #include <QVector> //Dynamic array
+#include <QMessageBox>
 #include "datafilecontroller.h" //Imports the class that saves the experiment data
 #include "cursorcontroller.h" //Handles the mouse cursor
 #include "guiobject.h" //Defines the objects to be drawn in the GUI
@@ -52,6 +53,7 @@ public:
 
 public slots:
     void timerTick(); //Method evoked by the timer    
+    void timerRestTick(); //Method evoked by the timer that counts rest between trials
 
 signals:
     //Starts the timer
@@ -72,14 +74,15 @@ private:
     //Distance from center to target
     const int distanceTarget = 400;
     //Height of the target
-    const int objHeight = 30;
+    const int objHeight = 40;
     //Width of the target
-    const int objWidth = 30;
+    const int objWidth = 40;
     const int cursorWidth = 15;
     const int cursorHeight = 15;
     //Defines the session
     const bool perturbation = true;
-    const int perturbationDegree = 40;   
+    const int perturbationDegree = 40;
+    const int restInterval = 850; //ms
     int* numberTrialsperSession;
     bool* perturbationSession;
     //Filename prefix
@@ -88,11 +91,14 @@ private:
     QWidget *parent;
     DataFileController *fileController;
     CursorController *cursorController;
-    QMutex* mutex;
+    QMutex *mutex;
     QTimer *timer;
+    QTimer *timerRest;
     QThread *workerThread;
-    GUIObject* objTarget;
-    GUIObject* objOrigin;
+    GUIObject *objTarget;
+    GUIObject *objOrigin;
+    GUIObject *objFeedbackCursor;
+    QColor targetColor;
     //Methods    
     void writeHeader();
     void saveData();    
@@ -107,6 +113,7 @@ private:
     int sessionCounter;
     bool flagRecord = false;
     bool initialized = false;
+    bool flagFeedback = true;
     QVector<QString> vData;
 };
 

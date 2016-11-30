@@ -14,6 +14,7 @@
 #include <QScreen>
 #include <QPaintDevice>
 #include <QTime>
+#include <QMessageBox>
 
 #include "reachingwindow.h"
 #include "ui_reachingwindow.h"
@@ -73,6 +74,11 @@ void ReachingWindow::mousePressEvent(QMouseEvent *e)
 void ReachingWindow::mouseMoveEvent(QMouseEvent *e)
 {
     this->protocolController->MouseMove();
+}
+
+void ReachingWindow::experimentFinished()
+{
+
 }
 
 /*
