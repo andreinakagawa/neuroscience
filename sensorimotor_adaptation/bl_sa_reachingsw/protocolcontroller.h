@@ -83,8 +83,8 @@ private:
     const bool perturbation = true;
     const int perturbationDegree = 40;
     const int restInterval = 850; //ms
-    int* numberTrialsperSession;
-    bool* perturbationSession;
+    QVector<int> numberTrialsperSession;
+    QVector<bool> perturbationSession;
     //Filename prefix
     const QString fileprefix = "subject1";
     //Objects

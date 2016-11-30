@@ -29,15 +29,13 @@ ProtocolController::ProtocolController(QWidget *p)
     //Enables mouse tracking
     this->parent->setMouseTracking(true);
 
-    this->numberTrialsperSession = (int*)malloc(sizeof(int)*this->numberSessions);
-    this->numberTrialsperSession[0] = 2;
-    this->numberTrialsperSession[1] = 2;
-    this->numberTrialsperSession[2] = 2;
+    this->numberTrialsperSession.push_back(2);
+    this->numberTrialsperSession.push_back(2);
+    this->numberTrialsperSession.push_back(2);
 
-    this->perturbationSession = (bool*)malloc(sizeof(bool)*this->numberSessions);
-    this->perturbationSession[0] = false;
-    this->perturbationSession[1] = true;
-    this->perturbationSession[2] = false;    
+    this->perturbationSession.push_back(false);
+    this->perturbationSession.push_back(true);
+    this->perturbationSession.push_back(false);
 }
 
 void ProtocolController::Initialize()
@@ -148,8 +146,6 @@ ProtocolController::~ProtocolController()
     free(this->timer);
     free(this->fileController);
     free(this->cursorController);
-    free(this->numberTrialsperSession);
-    free(this->perturbationSession);
     free(this->mutex);
     this->workerThread->deleteLater();
     free(this->workerThread);
@@ -303,16 +299,26 @@ void ProtocolController::writeHeader()
                 + " - " + QTime::currentTime().toString() + "\n";
         header += "---------------------------------------------\n";
         header += "Details of the experiment\n";
-        header += "Number of sessions: " + QString::number(this->numberSessions) + "\n";
-        header += "Number of trials: " + QString::number(this->numberTrials) + "\n";        
+        header += "Number of sessions: " + QString::number(this->numberSessions) + "\n";        
         header += "Sampling frequency (Hz): " + QString::number(this->samplingFrequency) + "\n";
         header += "Monitor width (pixels): " + QString::number(this->parent->geometry().width()) + "\n";
         header += "Monitor height (pixels): " + QString::number(this->parent->geometry().height()) + "\n";
-        header += "Perturbation: ";
-        if(this->perturbation)
-            header += "Yes\n";
-        else
-            header += "No\n";
+        header += "---------------------------------------------\n";
+        header += "Details of the sessions\n";
+        header += "Number of trials: ";
+        for(int i=0; i<this->numberSessions; i++)
+        {
+            header += QString::number(this->numberTrialsperSession[i]) + "; ";
+        }
+        header += "\nPerturbation of each session: ";
+        for(int i=0; i<this->numberSessions; i++)
+        {
+            if(this->perturbationSession[i])
+                header += "True; ";
+            else
+                header += "False; ";
+        }
+        header += "\n";
         header += "Perturbation degree: " + QString::number(this->perturbationDegree) + "\n";
         header += "---------------------------------------------\n";        
         header += "Task parameters\n";
