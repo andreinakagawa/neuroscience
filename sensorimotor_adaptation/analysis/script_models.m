@@ -10,7 +10,7 @@
 % Based on the slides from Dr. Robert van Beers, lectured in CoSMo 2015
 %--------------------------------------------------------------------------
 %Number of trials
-N = 300;
+N = 400;
 %Trials
 trials = 1:N;
 %Perturbation
@@ -59,7 +59,7 @@ end
 %x2(i+1) = As*x2(i) + Bs*e(i)
 %x(i) = x1(i) + x2(i)
 %Bf < Bs, Af < As
-Af = 0.92;
+Af = 0.95;
 Bf = 0.06;
 As = 0.995;
 Bs = 0.02;
