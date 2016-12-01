@@ -186,8 +186,11 @@ QVector<GUIObject*> ProtocolController::updateGUI()
         //In this case, the data acquisition is initiated
         if(objFeedbackCursor->HasCollidedCenter(objOrigin) && flagRecord==false)
         {
-            emit this->start();
-            this->flagRecord=true;
+            if(this->flagExperiment)
+            {
+                emit this->start();
+                this->flagRecord=true;
+            }
         }
 
         //Checks if the visual feedback cursor has collided with the
@@ -195,10 +198,13 @@ QVector<GUIObject*> ProtocolController::updateGUI()
         //and saved in a file
         else if(objFeedbackCursor->HasCollidedCenter(objTarget) && flagRecord==true)
         {
-            this->flagRecord=false;
-            emit this->stop();
-            this->saveData();
-            this->vData.clear();
+            if(this->flagExperiment)
+            {
+                this->flagRecord=false;
+                emit this->stop();
+                this->saveData();
+                this->vData.clear();
+            }
         }
     }
 
@@ -206,19 +212,37 @@ QVector<GUIObject*> ProtocolController::updateGUI()
     return vobj;
 }
 
+//This method indicates that the experiment should be started
+void ProtocolController::BeginExperiment()
+{
+    //Sets the "flagExperiment"
+    this->flagExperiment = true;
+    //Sets the cursor back to the origin
+    QCursor::setPos(this->originX,this->originY);
+}
+
 //Saves the samples from the visual feedback
 void ProtocolController::timerTick()
 {
+    //Gets the current time -> to check the sampling frequency
+    QString currentTime = QTime::currentTime().toString("hh:mm:ss.zzz");
+    //Locks the mutex for acessing the "cursorController" object for retrieving
+    //the x and y position of the visual feedback cursor
     this->mutex->lock();
-    if(this->flagRecord)
+    if(this->flagRecord) //If the cursor should be recorded
     {
-        QString val = QString::number(this->cursorController->x()) + "\t" +
+        //Creates a new string containing the current time
+        //and the X and Y position of the visual feedback
+        QString val =  currentTime + "\t" + QString::number(this->cursorController->x()) + "\t" +
                 QString::number(this->cursorController->y());
+        //Adds the string to the QVector "vData"
         vData.push_back(val);
-    }
+    }    
+    //Releases the mutex
     this->mutex->unlock();
 }
 
+//This timer serves to control the rest period between trials
 void ProtocolController::timerRestTick()
 {
     //Stops the timer to prevent it from firing again
@@ -236,39 +260,61 @@ void ProtocolController::timerRestTick()
 //deviated
 void ProtocolController::MouseMove()
 {
+    //Locks the mutex for acessing the "cursorController" object for setting
+    //the x and y position of the visual feedback cursor
     this->mutex->lock();
 
     //Gets the X and Y coordinates of the cursor
     this->cursorController->setX(QCursor::pos().x());
     this->cursorController->setY(QCursor::pos().y());
     //Checks if the visual feedback should be perturbed
-    //and updates it
-    qDebug() << this->perturbationSession[this->sessionCounter-1];
+    //and updates it    
+    //The perturbation is given by the QVector "perturbationSession" that indicates
+    //whether a given session should be perturbed
     if(this->perturbationSession[this->sessionCounter-1])
-        this->cursorController->RotatePoint();    
+        this->cursorController->RotatePoint(); //Applies rotation if required
 
+    //Releases the mutex
     this->mutex->unlock();
 }
 
+//Method for saving the visual feedback motion
 void ProtocolController::saveData()
 {
+    //Stops painting new positions from the cursor
     this->flagFeedback=false;
+
+    //Creates the filename
+    //Example: If subject name is "subject1", for session number one and trial number one
+    //datafile: subject1_1_1.txt
     QString datafile = this->fileprefix + "_data_" +
             QString::number(this->sessionCounter) +
             "_" + QString::number(this->trialCounter+1) + ".txt";
+    //Creates a new instance of FileController to save data
     this->fileController = new DataFileController(datafile.toStdString());
+    //Opening the file
     this->fileController->Open();
+    //For each element in QVector "vData", writes it to file
     for(int i=0; i<vData.size(); i++)
-        this->fileController->WriteData(vData.at(i));
+        this->fileController->WriteData(vData.at(i)); //Retrieves the cursor sample
+    //Closes and saves the file
     this->fileController->Close();
+
+    //Controlling the experiment
+    //Increments the trial counter
     this->trialCounter++;
 
+    //If the total number of trials for a given session have been performed, resets
+    //the counter and increments the session counter
     if(this->trialCounter >= this->numberTrialsperSession[this->sessionCounter-1])
     {
         this->trialCounter=0;
         this->sessionCounter++;
     }
 
+    //If the total number of sessions have been performed
+    //Finishes the experiment by presenting a QMessageBox and
+    //closing the experiment window
     if(this->sessionCounter > this->numberSessions)
     {
         QMessageBox msgBox;
@@ -277,8 +323,12 @@ void ProtocolController::saveData()
         this->parent->close();
     }
 
+    //Triggers the timer that controls the rest period
     this->timerRest->start();
+    //Changes the target color to "Blue" indicating that
+    //the target has been hit
     this->targetColor = Qt::blue;
+    //Clears the QVector "vData" so it can store new visual feeddback samples
     this->vData.clear();    
 }
 

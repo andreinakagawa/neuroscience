@@ -47,6 +47,8 @@ public:
     void MouseMove();
     //Initialize the protocol
     void Initialize();
+    //Method that indicates that the experiment should start
+    void BeginExperiment();
     //-----------------------------------------------------------------
     //-----------------------------------------------------------------
 
@@ -64,7 +66,7 @@ signals:
 private:
     //Consts
     //Sampling frequency (Hz)
-    const int samplingFrequency = 500;
+    const int samplingFrequency = 100;
     //Total number of trials
     const int numberTrials = 50;
     //Total number of sessions
@@ -114,6 +116,7 @@ private:
     bool flagRecord = false;
     bool initialized = false;
     bool flagFeedback = true;
+    bool flagExperiment = false;
     QVector<QString> vData;
 };
 
