@@ -29,9 +29,9 @@ ProtocolController::ProtocolController(QWidget *p)
     //Enables mouse tracking
     this->parent->setMouseTracking(true);
 
-    this->numberTrialsperSession.push_back(2);
-    this->numberTrialsperSession.push_back(2);
-    this->numberTrialsperSession.push_back(2);
+    this->numberTrialsperSession.push_back(30);
+    this->numberTrialsperSession.push_back(60);
+    this->numberTrialsperSession.push_back(20);
 
     this->perturbationSession.push_back(false);
     this->perturbationSession.push_back(true);
@@ -233,7 +233,7 @@ void ProtocolController::timerTick()
     {
         //Creates a new string containing the current time
         //and the X and Y position of the visual feedback
-        QString val =  currentTime + "\t" + QString::number(this->cursorController->x()) + "\t" +
+        QString val = QString::number(this->cursorController->x()) + "\t" +
                 QString::number(this->cursorController->y());
         //Adds the string to the QVector "vData"
         vData.push_back(val);
@@ -330,6 +330,11 @@ void ProtocolController::saveData()
     this->targetColor = Qt::blue;
     //Clears the QVector "vData" so it can store new visual feeddback samples
     this->vData.clear();    
+}
+
+bool ProtocolController::ExperimentIsRunning()
+{
+    return this->flagExperiment;
 }
 
 //Creates the header file for the experiment

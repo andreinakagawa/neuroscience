@@ -49,6 +49,7 @@ public:
     void Initialize();
     //Method that indicates that the experiment should start
     void BeginExperiment();
+    bool ExperimentIsRunning();
     //-----------------------------------------------------------------
     //-----------------------------------------------------------------
 
@@ -74,7 +75,7 @@ private:
     //Number of targets
     const int numberTargets = 1;
     //Distance from center to target
-    const int distanceTarget = 400;
+    const int distanceTarget = 350;
     //Height of the target
     const int objHeight = 40;
     //Width of the target
@@ -83,12 +84,12 @@ private:
     const int cursorHeight = 15;
     //Defines the session
     const bool perturbation = true;
-    const int perturbationDegree = 40;
-    const int restInterval = 850; //ms
+    const int perturbationDegree = -40;
+    const int restInterval = 1000; //ms
     QVector<int> numberTrialsperSession;
     QVector<bool> perturbationSession;
     //Filename prefix
-    const QString fileprefix = "subject1";
+    const QString fileprefix = "italo_piloto1";
     //Objects
     QWidget *parent;
     DataFileController *fileController;

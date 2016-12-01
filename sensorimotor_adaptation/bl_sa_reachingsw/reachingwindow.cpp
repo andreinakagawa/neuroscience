@@ -67,10 +67,11 @@ void ReachingWindow::paintEvent(QPaintEvent *e)
 }
 
 void ReachingWindow::mousePressEvent(QMouseEvent *e)
-{
+{    
     if(e->button() == Qt::RightButton)
     {
-        this->protocolController->BeginExperiment();
+        if(!this->protocolController->ExperimentIsRunning())
+            this->protocolController->BeginExperiment();
     }
 }
 
