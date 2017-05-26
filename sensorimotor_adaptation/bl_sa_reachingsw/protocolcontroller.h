@@ -23,7 +23,7 @@
 #include <QTimer> //Timer for saving data
 #include <QMutex> //Necessary for handling multiple acess
 #include <QVector> //Dynamic array
-#include <QMessageBox>
+#include <QMessageBox> //Display a messagebox on the screen
 #include "datafilecontroller.h" //Imports the class that saves the experiment data
 #include "cursorcontroller.h" //Handles the mouse cursor
 #include "guiobject.h" //Defines the objects to be drawn in the GUI
@@ -71,11 +71,11 @@ private:
     //Total number of trials
     const int numberTrials = 50;
     //Total number of sessions
-    const int numberSessions = 3;
+    const int numberSessions = 4;
     //Number of targets
     const int numberTargets = 1;
     //Distance from center to target
-    const int distanceTarget = 350;
+    const int distanceTarget = 320;
     //Height of the target
     const int objHeight = 40;
     //Width of the target
@@ -85,11 +85,12 @@ private:
     //Defines the session
     const bool perturbation = true;
     const int perturbationDegree = -40;
-    const int restInterval = 1000; //ms
+    const int restInterval = 1500; //ms
     QVector<int> numberTrialsperSession;
     QVector<bool> perturbationSession;
+    QVector<bool> vectorCursorFeedback;
     //Filename prefix
-    const QString fileprefix = "italo_piloto1";
+    const QString fileprefix = "andrei_mesa_piloto1";
     //Objects
     QWidget *parent;
     DataFileController *fileController;
@@ -101,6 +102,7 @@ private:
     GUIObject *objTarget;
     GUIObject *objOrigin;
     GUIObject *objFeedbackCursor;
+    GUIObject *objCursor;
     QColor targetColor;
     //Methods    
     void writeHeader();
@@ -114,9 +116,10 @@ private:
     int targetY;
     int trialCounter;
     int sessionCounter;
+    bool flagPerturbation = false;
     bool flagRecord = false;
     bool initialized = false;
-    bool flagFeedback = true;
+    bool flagFeedback = true;    
     bool flagExperiment = false;
     QVector<QString> vData;
 };

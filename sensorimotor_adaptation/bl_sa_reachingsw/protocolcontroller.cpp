@@ -29,13 +29,20 @@ ProtocolController::ProtocolController(QWidget *p)
     //Enables mouse tracking
     this->parent->setMouseTracking(true);
 
-    this->numberTrialsperSession.push_back(30);
-    this->numberTrialsperSession.push_back(60);
-    this->numberTrialsperSession.push_back(20);
+    this->numberTrialsperSession.push_back(1);
+    this->numberTrialsperSession.push_back(1);
+    this->numberTrialsperSession.push_back(1);
+    this->numberTrialsperSession.push_back(1);
 
     this->perturbationSession.push_back(false);
     this->perturbationSession.push_back(true);
     this->perturbationSession.push_back(false);
+    this->perturbationSession.push_back(true);
+
+    this->vectorCursorFeedback.push_back(true);
+    this->vectorCursorFeedback.push_back(true);
+    this->vectorCursorFeedback.push_back(true);
+    this->vectorCursorFeedback.push_back(true);
 }
 
 void ProtocolController::Initialize()
@@ -128,6 +135,7 @@ void ProtocolController::Initialize()
         this->objTarget->type = GUIObject::Ellipse;
 
         this->objFeedbackCursor = new GUIObject();
+        this->objCursor = new GUIObject();
 
         //Writes the header file
         this->writeHeader();
@@ -170,6 +178,16 @@ QVector<GUIObject*> ProtocolController::updateGUI()
 
     if(this->flagFeedback)
     {
+        //Creates an object that represents the actual mouse movement
+        x = QCursor::pos().x();
+        y = QCursor::pos().y();
+        objCursor->point = new QPointF(x,y);
+        objCursor->pen = new QPen(Qt::yellow);
+        objCursor->pen->setWidth(0);
+        objCursor->width = this->cursorWidth;
+        objCursor->height = this->cursorHeight;
+        objCursor->type = GUIObject::Ellipse;
+
         //Creates an object that represents the visual feedback
         //Can be different from the actual mouse movement
         //GUIObject *objFeedbackCursor = new GUIObject();
@@ -184,31 +202,31 @@ QVector<GUIObject*> ProtocolController::updateGUI()
 
         //Checks if the visual feedback cursor has collided with the origin
         //In this case, the data acquisition is initiated
-        if(objFeedbackCursor->HasCollidedCenter(objOrigin) && flagRecord==false)
+        if(objFeedbackCursor->HasCollidedCenter(objOrigin) && flagRecord==false && this->flagExperiment)
         {
-            if(this->flagExperiment)
-            {
-                emit this->start();
-                this->flagRecord=true;
-            }
+            emit this->start();
+            this->flagRecord=true;
+            this->flagPerturbation = this->perturbationSession[this->sessionCounter-1];
         }
 
         //Checks if the visual feedback cursor has collided with the
         //target. In this case, the data acquisition is stopped
         //and saved in a file
-        else if(objFeedbackCursor->HasCollidedCenter(objTarget) && flagRecord==true)
+        else if(objFeedbackCursor->HasCollidedCenter(objTarget) && flagRecord==true && this->flagExperiment)
         {
-            if(this->flagExperiment)
-            {
-                this->flagRecord=false;
-                emit this->stop();
-                this->saveData();
-                this->vData.clear();
-            }
+            this->flagPerturbation = false;
+            this->flagRecord=false;
+            emit this->stop();
+            this->saveData();
+            this->vData.clear();
         }
     }
 
-    vobj.push_back(objFeedbackCursor);
+    //vobj.push_back(this->objCursor);
+
+    if(this->vectorCursorFeedback.at(this->sessionCounter-1))
+        vobj.push_back(this->objFeedbackCursor);
+
     return vobj;
 }
 
@@ -218,7 +236,7 @@ void ProtocolController::BeginExperiment()
     //Sets the "flagExperiment"
     this->flagExperiment = true;
     //Sets the cursor back to the origin
-    QCursor::setPos(this->originX,this->originY);
+    //QCursor::setPos(this->originX,this->originY);
 }
 
 //Saves the samples from the visual feedback
@@ -248,7 +266,7 @@ void ProtocolController::timerRestTick()
     //Stops the timer to prevent it from firing again
     this->timerRest->stop();
     //Sets the cursor back to the origin
-    QCursor::setPos(this->originX,this->originY);
+    //QCursor::setPos(this->originX,this->originY);
     //Allows the drawing of the cursor
     this->flagFeedback=true;
     //Paints the target back to red
@@ -271,8 +289,20 @@ void ProtocolController::MouseMove()
     //and updates it    
     //The perturbation is given by the QVector "perturbationSession" that indicates
     //whether a given session should be perturbed
-    if(this->perturbationSession[this->sessionCounter-1])
+    if(this->flagPerturbation)
         this->cursorController->RotatePoint(); //Applies rotation if required
+
+    //Checks if the cursor position is within the limits of the monitor
+    //X-axis
+    if(this->cursorController->x() < 0)
+        this->cursorController->setX(0);
+    else if(this->cursorController->x() > this->parent->width())
+        this->cursorController->setX(this->parent->width());
+    //Y-axis
+    if(this->cursorController->y() < 0)
+        this->cursorController->setY(0);
+    else if(this->cursorController->y() > this->parent->height())
+        this->cursorController->setY(this->parent->height());
 
     //Releases the mutex
     this->mutex->unlock();
@@ -317,6 +347,7 @@ void ProtocolController::saveData()
     //closing the experiment window
     if(this->sessionCounter > this->numberSessions)
     {
+        this->sessionCounter--;
         QMessageBox msgBox;
         msgBox.setText("The experiment has ended.");
         msgBox.exec();
