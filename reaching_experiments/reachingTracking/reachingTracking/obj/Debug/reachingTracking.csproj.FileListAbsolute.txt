@@ -1,0 +1,9 @@
+C:\Users\Biolab\Desktop\reachingCsharp\reachingTracking\reachingTracking\bin\Debug\reachingTracking.exe.config
+C:\Users\Biolab\Desktop\reachingCsharp\reachingTracking\reachingTracking\bin\Debug\reachingTracking.exe
+C:\Users\Biolab\Desktop\reachingCsharp\reachingTracking\reachingTracking\bin\Debug\reachingTracking.pdb
+C:\Users\Biolab\Desktop\reachingCsharp\reachingTracking\reachingTracking\obj\Debug\reachingTracking.csprojResolveAssemblyReference.cache
+C:\Users\Biolab\Desktop\reachingCsharp\reachingTracking\reachingTracking\obj\Debug\reachingTracking.MainWindow.resources
+C:\Users\Biolab\Desktop\reachingCsharp\reachingTracking\reachingTracking\obj\Debug\reachingTracking.Properties.Resources.resources
+C:\Users\Biolab\Desktop\reachingCsharp\reachingTracking\reachingTracking\obj\Debug\reachingTracking.csproj.GenerateResource.Cache
+C:\Users\Biolab\Desktop\reachingCsharp\reachingTracking\reachingTracking\obj\Debug\reachingTracking.exe
+C:\Users\Biolab\Desktop\reachingCsharp\reachingTracking\reachingTracking\obj\Debug\reachingTracking.pdb
