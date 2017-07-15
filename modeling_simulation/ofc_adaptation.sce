@@ -103,57 +103,10 @@ for k=1:length(t)-1
     cont = cont + 4;
 end
 //------------------------------------------------------------------------------
-//Adaptation with iterative learning control
-//Perturbation
-//Rotation matrix
-Ck = [cos((30*%pi)/180) 0 -sin((30*%pi)/180) 0; sin((30*%pi)/180) 0 cos((30*%pi)/180) 0];
-for n=1:1
-    upp = uint;
-    cont = 1;
-    //Desired setpoints or reference trajectory
-    xd = [0;0;5;0];
-    xint = []; //stores all the states during integration
-    uint = []; //stores all the inputs during integration
-    costQ = [0]; //cost of states
-    costR = [0]; //cost of control
-    x0 = [0;0;0;0]; //temporary variable for storing states
-    u0 = [0;0];
-    x = x0;
-    yint = [x0];
-    xint = [xint x0];
-    uint = [uint u0];
-    ep = [];
-    for k=1:length(t)-1
-        //perturbation
-        r = x - x0;
-        r = Ck*r;
-        r = r + [x0(1);x0(3)];
-        y = [r(1);0;r(2);0];
-        //Calculating the input
-        e = [y(1);y(3)] - [x(1);x(3)];
-        ep = [ep e];
-        u = upp(:,k);
-        //Calculating the new states
-        x = Ad*x + Bd*u;
-        //Storing the new states
-        xint = [xint x];
-        //Storing the new inputs
-        uint = [uint u];
-        //Storing the output
-        yint = [yint y];
-        //Stores the cost in this step
-        costQ = [costQ (x-xd)'*Qd*(x-xd)];
-        //Stores the cost in this step
-        costR = [costR u'*Rd*u];
-        //Increments the counter to loop through the gain matrix
-        cont = cont + 4;
-    end
-end
 //------------------------------------------------------------------------------
 figure();
 plot(xint(1,:),xint(3,:),'k');
 plot(xint(1,$),xint(3,$),'k.');
-plot(yint(1,:),yint(3,:),'b');
 plot(x0(1),x0(3),'b.');
 plot(xd(1),xd(3),'r.');
 ax=gca();
