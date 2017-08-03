@@ -135,6 +135,12 @@ for k=1:length(t)
     u = -Kdisc(:,cont:cont+7)*(x-xd);
     //new states
     x = Ad*x + Bd*u;
+    
+    //force produced by the robot - perturbation
+    frx = dt*((Dv(1,1)/m)*x(2)) + dt*((Dv(1,2)/m)*x(4));
+    fry = dt*((Dv(2,1)/m)*x(2)) + dt*((Dv(2,2)/m)*x(4));
+    frint = [frint [frx;fry]];
+        
     //saving the optimal trajectory
     xopt = [xopt x];
     uopt = [uopt u];
@@ -149,7 +155,7 @@ numTrials = 50;
 alpha = 0.9;
 erro = zeros(uopt);
 up = uopt;
-for n=1:1
+for n=1:10
     xint = [];
     uint = up;
     up = [];
@@ -167,13 +173,10 @@ for n=1:1
     frint = [];
     for k=1:length(t)
         //input - motor commands
-        u = 0.9*uint(:,k) + 0.2 * erro(:,k);
+        u = 0.9*uint(:,k) + 0.1 * erro(:,k);
         up = [up u];
         //new states
         x = Ak*x + Bk*u;
-        //force produced by the robot - perturbation
-        frx = dt*((Dv(1,1)/m)*x(2)) + dt*((Dv(1,2)/m)*x(4));
-        fry = dt*((Dv(2,1)/m)*x(2)) + dt*((Dv(2,2)/m)*x(4));
         
         //optimal state estimation - kalman filter
         //output
@@ -187,8 +190,13 @@ for n=1:1
         //kalman filter
         [xpp,pp] = kalman(Ak,Bk,Ck,q,r,x00,p0,ynn,u);
         
-        erro(1,k) = u(1) - frx;
-        erro(2,k) = 0;
+        //force produced by the robot - perturbation
+        frx = dt*((Dv(1,1)/m)*x(2)) + dt*((Dv(1,2)/m)*x(4));
+        fry = dt*((Dv(2,1)/m)*x(2)) + dt*((Dv(2,2)/m)*x(4));
+        frint = [frint [frx;fry]];
+
+        erro(1,k) = u(1) + frint(1,k);
+        erro(2,k) = u(2) + frint(2,k);
         
         //updating variables - state estimation
         yk = [yk ykk];
@@ -200,13 +208,14 @@ for n=1:1
         //updating variables - control
         xint = [xint x];
         uint = [uint u];
-        frint = [frint [frx;fry]];
         cont = cont+8;
     end
     
     figure();
     plot(xint(1,:),xint(3,:));
     plot(xd(1),xd(3),'r.');
+    figure();
+    plot(frint(1,:)); plot(up(1,:),'r'); plot(erro(1,:),'g');
 //    ax=gca();
 //    ax.data_bounds=[-0.2 -0.1; 0.2 ty+0.1];
 end
