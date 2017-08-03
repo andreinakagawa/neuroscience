@@ -65,7 +65,7 @@ endfunction
 //initial time
 t0 = 0;
 //final time
-tf = 20;
+tf = 5;
 //time step
 dt = 0.01;
 //time vector
@@ -73,11 +73,13 @@ t = t0:dt:tf;
 //------------------------------------------------------------------------------
 //Force-field
 Dv = [0 13; -13 0];
+Dnull = [0 0; 0 0];
 //Mass
 m=4;
 //time-constant
 tau = 0.120;
 [Ad,Bd,Cd] = discPointMassFFModel(m,dt,Dv,tau);
+[Ak,Bk,Ck] = discPointMassFFModel(m,dt,Dv,tau);
 //------------------------------------------------------------------------------
 //Optimal feedback control
 //------------------------------------------------------------------------------
@@ -110,8 +112,9 @@ end
 //OFC simulation
 //LQG parameters
 //Initial condition
-x0 = [0;0;0;0;0;0;0;5];
-xd = [0;0;5;0;0;0;0;5];
+tx = 0; ty=0.5;
+x0 = [0;0;0;0;0;0;tx;ty];
+xd = [0;tx;ty;0;0;0;tx;ty];
 x = x0;
 xint = [];
 uint = [];
@@ -133,14 +136,18 @@ for k=1:length(t)
     //input - motor commands
     u = -Kdisc(:,cont:cont+7)*(xpp-xd);
     //new states
-    x = Ad*x + Bd*u;
-    //optimal state estimation - kalman filter
-    ykk = Cd * x;
-    for i=1:length(ykk)
-        ynn(i) = ykk(i) + rand(1,'normal')/10;        
-    end
+    x = Ak*x + Bd*u;
     
-    [xpp,pp] = kalman(Ad,Bd,Cd,q,r,x00,p0,ynn,u);
+    //optimal state estimation - kalman filter
+    //output
+    ykk = Ck * x;
+    //adding noise
+    for i=1:length(ykk)
+        ynn(i) = ykk(i) + 0.01 * rand(1,'normal');        
+    end
+
+    //kalman filter    
+    [xpp,pp] = kalman(Ad,Bd,Cd,q,r,x00,p0,ynn,u);    
     
     yk = [yk ykk];
     yn = [yn ynn];
@@ -157,7 +164,7 @@ end
 figure();
 plot(xint(1,:),xint(3,:));
 plot(xd(1),xd(3),'r.');
-ax=gca();
-ax.data_bounds=[-0.5 -0.5; 1 6];
+//ax=gca();
+//ax.data_bounds=[-0.5 -0.5; 1 6];
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
