@@ -7,6 +7,11 @@
 // Author: Andrei Nakagawa, MSc
 // Contact: andrei.ufu@gmail.com
 //------------------------------------------------------------------------------
+// Description: Simulating force-field adaptation experiments
+// Reproducing results from Izawa et al. (2008)
+//------------------------------------------------------------------------------
+clear;
+clc;
 //------------------------------------------------------------------------------
 //Kalman filter
 function [xplus,pplus] = kalman(F,G,H,Q,R,xk,pk,yk,uk)
@@ -33,26 +38,48 @@ function [Ac,Bc,Cc] = pointMassModel(m)
     Cc = eye(size(Ac,1),size(Ac,2))
 endfunction
 //------------------------------------------------------------------------------
-[A,B,C] = pointMassModel(1);
+function [Ak,Bk,Ck] = discPointMassModel(m,dt)
+    Ak = [1 dt 0 0; 0 1 0 0; 0 0 1 dt; 0 0 0 1];
+    Bk = [0 0; dt/m 0;0 0;0 dt/m];
+    Ck = eye(size(Ak,1),size(Ak,2));
+endfunction
+//------------------------------------------------------------------------------
+//Model of the plant during force field experiments
+//Force applied by the robot is velocity-dependent
+function [Ak,Bk,Ck] = discPointMassFFModel(m,dt,Dv,tau)
+    a1 = [1 dt 0 0 0 0 0 0];
+    a2 = [0 1+(dt*(Dv(1,1)/m)) 0 dt*(Dv(1,2)/m) dt/m 0 0 0];
+    a3 = [0 0 1 dt 0 0 0 0];
+    a4 = [0 (dt*(Dv(2,1)/m)) 0 dt*(Dv(2,2)/m) 0 dt/m 0 0];
+    a5 = [0 0 0 0 1 - (dt/tau) 0 0 0];
+    a6 = [0 0 0 0 0 1 - (dt/tau) 0 0];
+    a7 = [0 0 0 0 0 0 1 0];
+    a8 = [0 0 0 0 0 0 0 1];
+    Ak = [a1;a2;a3;a4;a5;a6;a7;a8];
+    Bk = [0 0; 0 0; 0 0; 0 0; dt/tau 0; 0 dt/tau; 0 0; 0 0];
+    Ck = eye(size(Ak,1),size(Ak,2));
+endfunction
 //------------------------------------------------------------------------------
 //Simulation parameters
-t0=0;
-tf=3;
+//Time
+//initial time
+t0 = 0;
+//final time
+tf = 20;
+//time step
 dt = 0.01;
+//time vector
 t = t0:dt:tf;
-//Continuous-time system
-contSys = syslin('c',A,B,C);
-//Discrete-time system
-discSys = dscr(contSys,dt);
 //------------------------------------------------------------------------------
+//Force-field
+Dv = [0 13; -13 0];
+//Mass
+m=4;
+//time-constant
+tau = 0.120;
+[Ad,Bd,Cd] = discPointMassFFModel(m,dt,Dv,tau);
 //------------------------------------------------------------------------------
-//Weight matrices
-Qd=diag([0.1,0.1,0.1,0.1]);
-Rd=diag([0.01,0.01]);
-//Discrete riccati
-Ad = discSys(2); //A
-Bd = discSys(3); //B
-//------------------------------------------------------------------------------
+//Optimal feedback control
 //------------------------------------------------------------------------------
 //Differential Riccati Equation - Discrete-time
 //Calculating the solution to riccati for each instant in time
@@ -60,7 +87,15 @@ Bd = discSys(3); //B
 //------------------------------------------------------------------------------
 Sdisc = [];
 Kdisc = [];
-S0 = diag([500,0,120,0]); //Estimate for the Riccati matrix 
+//Weight matrices
+Qd = zeros(8,8);
+Qd(1,1) = 5; Qd(1,7) = -5; Qd(3,3) = 5; Qd(3,8) = -5;
+Qd(2,2) = 0.01; Qd(4,4) = 0.01;
+Qd(5,5) = 0; Qd(6,6) = 0;
+Qd(7,1) = -5; Qd(7,7) = 5;
+Qd(8,3) = -5; Qd(8,8) = 5;
+Rd=diag([1e-5,1e-5]);
+S0 = diag([500,0,120,0,0,0,10,10]); //Estimate for the Riccati matrix 
 for k=1:length(t)
     //Calculating the time-varying gain
     K = inv(Bd'*S0*Bd + Rd)*(Bd'*S0*Ad);
@@ -72,74 +107,57 @@ for k=1:length(t)
     Kdisc = [Kdisc K];
 end
 //------------------------------------------------------------------------------
-cont = 1;
-//Desired setpoints or reference trajectory
-xd = [0;0;5;0];
-xint = []; //stores all the states during integration
-uint = []; //stores all the inputs during integration
-costQ = [0]; //cost of states
-costR = [0]; //cost of control
-x0 = [0;0;0;0]; //temporary variable for storing states
-u0 = [0;0];
+//OFC simulation
+//LQG parameters
+//Initial condition
+x0 = [0;0;0;0;0;0;0;5];
+xd = [0;0;5;0;0;0;0;5];
 x = x0;
-xint = [xint x0];
-uint = [uint u0];
-//Perturbation
-//Rotation matrix
-Ck = [cos((30*%pi)/180) 0 -sin((30*%pi)/180) 0; sin((30*%pi)/180) 0 cos((30*%pi)/180) 0];
-yint = [x0];
-yaux = x0;
-//------------------------------------------------------------------------------
-for k=1:length(t)-1
-    //Calculating the input
-    u = -Kdisc(:,cont:cont+3) * (x-xd);
-    //Calculating the new states
+xint = [];
+uint = [];
+frint = [];
+cont=1;
+//kalman parameters
+q = zeros(2,2);
+r = eye(8,8);
+x00=x0;
+p0 = eye(8,8);
+xp = [];
+yk = [x0];
+yn = [x0];
+xpp=x0;
+//Simulation
+for k=1:length(t)
+    frx = dt*((Dv(1,1)/m)*x(2)) + dt*((Dv(1,2)/m)*x(4));
+    fry = dt*((Dv(2,1)/m)*x(2)) + dt*((Dv(2,2)/m)*x(4));
+    //input - motor commands
+    u = -Kdisc(:,cont:cont+7)*(xpp-xd);
+    //new states
     x = Ad*x + Bd*u;
-    //perturbation
-    y = Ck*x;
-    y = [y(1);0;y(2);0];
-    aux = [yint y];
-    yvx = diff(yint(1,:));
-    if yvx == [] then
-        yvx = 0;
+    //optimal state estimation - kalman filter
+    ykk = Cd * x;
+    for i=1:length(ykk)
+        ynn(i) = ykk(i) + rand(1,'normal')/10;        
     end
-    yvy = diff(yint(3,:));
-    if yvy == [] then
-        yvy = 0;
-    end
-    yaux(1) = y(1);
-    yaux(2) = yvx($);
-    yaux(3) = y(3);
-    yaux(4) = yvy($);
-    yint = [yint yaux];
-    //Storing the new states
-    xint = [xint x];
-    //Storing the new inputs
+    
+    [xpp,pp] = kalman(Ad,Bd,Cd,q,r,x00,p0,ynn,u);
+    
+    yk = [yk ykk];
+    yn = [yn ynn];
+    xp = [xp xpp];
+    x00 = xpp;
+    p0 = pp;
+    
+    xint = [xint x]; 
     uint = [uint u];
-    //Stores the cost in this step
-    costQ = [costQ (x-xd)'*Qd*(x-xd)];
-    //Stores the cost in this step
-    costR = [costR u'*Rd*u];
-    //Increments the counter to loop through the gain matrix
-    cont = cont + 4;
+    frint = [frint [frx;fry]];
+    cont = cont+8;
 end
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
 figure();
-plot(xint(1,:),xint(3,:),'k');
-plot(xint(1,$),xint(3,$),'k.');
-plot(yint(1,:),yint(3,:),'b');
-plot(x0(1),x0(3),'b.');
+plot(xint(1,:),xint(3,:));
 plot(xd(1),xd(3),'r.');
 ax=gca();
-ax.data_bounds=[-5 -5; 5 5];
-figure();
-plot(t,xint(2,:),'r');
-plot(t,xint(4,:),'g');
-plot(t,uint(1,:),'k');
-plot(t,uint(2,:),'k');
-figure();
-plot(t,costQ,'r');
-plot(t,costR,'b');
-title("Cost");
+ax.data_bounds=[-0.5 -0.5; 1 6];
+//------------------------------------------------------------------------------
 //------------------------------------------------------------------------------

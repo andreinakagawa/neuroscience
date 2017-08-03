@@ -8,6 +8,9 @@
 // Contact: andrei.ufu@gmail.com
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+clear;
+clc;
+//------------------------------------------------------------------------------
 //Kalman filter
 function [xplus,pplus] = kalman(F,G,H,Q,R,xk,pk,yk,uk)
     //time update (prediction)
@@ -89,8 +92,8 @@ r = eye(4,4);
 x00=x0;
 p0 = eye(4,4);
 xp = [];
-yk = [];
-yn = [];
+yk = [x0];
+yn = [x0];
 xpp=x0;
 for k=1:length(t)-1
     //Calculating the input
@@ -115,7 +118,7 @@ for k=1:length(t)-1
     //Stores the cost in this step
     costR = [costR u'*Rd*u];
     //Increments the counter to loop through the gain matrix
-    cont = cont + 4;    
+    cont = cont + 4;
 end
 //------------------------------------------------------------------------------
 figure();
@@ -133,4 +136,8 @@ plot(t,uint(2,:),'k');
 figure();
 plot(t,costQ,'r');
 plot(t,costR,'b');
+figure();
+plot(t,yn(3,:),'g');
+plot(t,yk(3,:),'b');
+plot(t,xint(3,:),'r.');
 //------------------------------------------------------------------------------
