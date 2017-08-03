@@ -78,7 +78,7 @@ Dnull = [0 0; 0 0];
 m=4;
 //time-constant
 tau = 0.120;
-[Ad,Bd,Cd] = discPointMassFFModel(m,dt,Dv,tau);
+[Ad,Bd,Cd] = discPointMassFFModel(m,dt,Dnull,tau);
 [Ak,Bk,Ck] = discPointMassFFModel(m,dt,Dv,tau);
 //------------------------------------------------------------------------------
 //Optimal feedback control
@@ -116,8 +116,8 @@ tx = 0; ty=0.5;
 x0 = [0;0;0;0;0;0;tx;ty];
 xd = [0;tx;ty;0;0;0;tx;ty];
 x = x0;
-xint = [];
-uint = [];
+xopt = [];
+uopt = [];
 frint = [];
 cont=1;
 //kalman parameters
@@ -130,40 +130,89 @@ yk = [x0];
 yn = [x0];
 xpp=x0;
 //Simulation
-for k=1:length(t)
-    frx = dt*((Dv(1,1)/m)*x(2)) + dt*((Dv(1,2)/m)*x(4));
-    fry = dt*((Dv(2,1)/m)*x(2)) + dt*((Dv(2,2)/m)*x(4));
+for k=1:length(t)  
     //input - motor commands
-    u = -Kdisc(:,cont:cont+7)*(xpp-xd);
+    u = -Kdisc(:,cont:cont+7)*(x-xd);
     //new states
-    x = Ak*x + Bd*u;
-    
-    //optimal state estimation - kalman filter
-    //output
-    ykk = Ck * x;
-    //adding noise
-    for i=1:length(ykk)
-        ynn(i) = ykk(i) + 0.01 * rand(1,'normal');        
-    end
-
-    //kalman filter    
-    [xpp,pp] = kalman(Ad,Bd,Cd,q,r,x00,p0,ynn,u);    
-    
-    yk = [yk ykk];
-    yn = [yn ynn];
-    xp = [xp xpp];
-    x00 = xpp;
-    p0 = pp;
-    
-    xint = [xint x]; 
-    uint = [uint u];
-    frint = [frint [frx;fry]];
+    x = Ad*x + Bd*u;
+    //saving the optimal trajectory
+    xopt = [xopt x];
+    uopt = [uopt u];
     cont = cont+8;
 end
+figure(); plot(xopt(1,:),xopt(3,:));
+ax=gca();
+ax.data_bounds=[-0.2 -0.1; 0.2 ty+0.1];
 //------------------------------------------------------------------------------
-figure();
-plot(xint(1,:),xint(3,:));
-plot(xd(1),xd(3),'r.');
+//Iterative learning control
+numTrials = 50;
+alpha = 0.9;
+erro = zeros(uopt);
+up = uopt;
+for n=1:1
+    xint = [];
+    uint = up;
+    up = [];
+    cont=1;
+    x = x0;
+    //kalman parameters
+    q = zeros(2,2);
+    r = eye(8,8);
+    x00=x0;
+    p0 = eye(8,8);
+    xp = [];
+    yk = [x0];
+    yn = [x0];
+    xpp=x0;
+    frint = [];
+    for k=1:length(t)
+        //input - motor commands
+        u = 0.9*uint(:,k) + 0.2 * erro(:,k);
+        up = [up u];
+        //new states
+        x = Ak*x + Bk*u;
+        //force produced by the robot - perturbation
+        frx = dt*((Dv(1,1)/m)*x(2)) + dt*((Dv(1,2)/m)*x(4));
+        fry = dt*((Dv(2,1)/m)*x(2)) + dt*((Dv(2,2)/m)*x(4));
+        
+        //optimal state estimation - kalman filter
+        //output
+        ykk = Ck * x;
+                
+        //adding noise
+        for i=1:length(ykk)
+            ynn(i) = ykk(i) + 0.01 * rand(1,'normal');
+        end
+    
+        //kalman filter
+        [xpp,pp] = kalman(Ak,Bk,Ck,q,r,x00,p0,ynn,u);
+        
+        erro(1,k) = u(1) - frx;
+        erro(2,k) = 0;
+        
+        //updating variables - state estimation
+        yk = [yk ykk];
+        yn = [yn ynn];
+        xp = [xp xpp];
+        x00 = xpp;
+        p0 = pp;    
+        
+        //updating variables - control
+        xint = [xint x];
+        uint = [uint u];
+        frint = [frint [frx;fry]];
+        cont = cont+8;
+    end
+    
+    figure();
+    plot(xint(1,:),xint(3,:));
+    plot(xd(1),xd(3),'r.');
+//    ax=gca();
+//    ax.data_bounds=[-0.2 -0.1; 0.2 ty+0.1];
+end
+//------------------------------------------------------------------------------
+//close all figures
+//xdel(winsid())
 //ax=gca();
 //ax.data_bounds=[-0.5 -0.5; 1 6];
 //------------------------------------------------------------------------------
