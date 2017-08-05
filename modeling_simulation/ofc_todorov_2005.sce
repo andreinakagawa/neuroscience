@@ -56,5 +56,46 @@ Q(:,:,$) = finalCost'*finalCost;
 R = 0.00001;
 //noise
 //output noise
-covOmega = 0.5 * diag([0.02,0.2,1]);
+noisePos = 0.02;
+noiseVel = 0.2;
+noiseForce = 1;
+covOmega = 0.5 * diag([noisePos,noiseVel,noiseForce]);
+//control-dependet noise
+roC = 0.5;
+//state-dependent noise - absent from this simulation
+//why not used?
+//inital state variance
+varx0 = 0;
+covx0 = zeros(5,5);
+//target
+target = 0.1;
+//initial state
+x0 = [0;0;0;0;target];
 //------------------------------------------------------------------------------
+//Finding optimal L and K
+K = [];
+for k=1:length(t)
+    //optimal estimation
+    //covariances
+    sie = covx0;
+    six = x0*x0';
+    sixe = zeros(size(x0,1),size(x0,1));
+    //kalman filter
+    //kalman gain
+    kk = A*sie*H' * inv(H*sie*H' + covOmega);
+    K = [K kk];
+    sie = (A - kk*H)*sie*A' + roC*L*six
+    //optimal control
+end
+//------------------------------------------------------------------------------
+//Testing signal-dependent noise
+//uint = [];
+//uint2 = [];
+//u0 = 1;
+//u1 = 10;
+//for k=1:length(t)
+//    ux = B*u0 + (B*u0*roC*rand(1,'normal'));
+//    uint = [uint ux];
+//    ux = B*u1 + (B*u1*roC*rand(1,'normal'));
+//    uint2 = [uint2 ux];
+//end
