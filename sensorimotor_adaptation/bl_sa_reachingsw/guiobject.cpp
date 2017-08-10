@@ -58,6 +58,14 @@ bool GUIObject::HasCollidedCenter(GUIObject *_obj)
         return false;
 }
 
+//Determines whether another GUIOBject is inside the
+//current object
+bool GUIObject::IsInside(GUIObject* _obj)
+{
+    //TODO: Implement this method
+   return false;
+}
+
 //Method that measures the Euclidean distance between
 //the current object and another GUIObject
 double GUIObject::EuclideanDistance(GUIObject* _obj)

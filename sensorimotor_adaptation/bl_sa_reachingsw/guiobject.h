@@ -32,9 +32,12 @@ public:
     //Determines whether another GUIObject has
     //collided with the center of the current object
     bool HasCollidedCenter(GUIObject *_obj);
+    //Determines whether another GUIOBject is inside the
+    //current object
+    bool IsInside(GUIObject* _obj);
     //Measures the euclidean distance between
     //the current object and another GUIObject
-    double EuclideanDistance(GUIObject *_obj);
+    double EuclideanDistance(GUIObject *_obj);    
 
     //Properties
     //Determines the parameters of the QPen object
