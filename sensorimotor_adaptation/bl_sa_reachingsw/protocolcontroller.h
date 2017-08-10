@@ -107,6 +107,7 @@ private:
     GUIObject *objFeedbackCursor;
     GUIObject *objCursor;
     QColor targetColor;
+    QColor feedbackCursorColor;
     //Methods    
     void writeHeader();
     void saveData();    

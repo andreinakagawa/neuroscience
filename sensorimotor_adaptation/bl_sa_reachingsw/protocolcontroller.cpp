@@ -135,6 +135,7 @@ void ProtocolController::Initialize()
         this->objTarget->type = GUIObject::Ellipse;
 
         this->objFeedbackCursor = new GUIObject();
+        this->feedbackCursorColor = Qt::green;
         this->objCursor = new GUIObject();
 
         //Writes the header file
@@ -191,10 +192,10 @@ QVector<GUIObject*> ProtocolController::updateGUI()
         //Creates an object that represents the visual feedback
         //Can be different from the actual mouse movement
         //GUIObject *objFeedbackCursor = new GUIObject();
-        x = this->cursorController->x()*2;
-        y = this->cursorController->y()*2;
+        x = this->cursorController->x();
+        y = this->cursorController->y();
         objFeedbackCursor->point = new QPointF(x,y);
-        objFeedbackCursor->pen = new QPen(Qt::green);
+        objFeedbackCursor->pen = new QPen(this->feedbackCursorColor);
         objFeedbackCursor->pen->setWidth(0);
         objFeedbackCursor->width = this->cursorWidth;
         objFeedbackCursor->height = this->cursorHeight;
@@ -214,11 +215,11 @@ QVector<GUIObject*> ProtocolController::updateGUI()
         //and saved in a file
         else if(objFeedbackCursor->HasCollidedCenter(objTarget) && flagRecord==true && this->flagExperiment)
         {
-            this->flagPerturbation = false;
+            /*this->flagPerturbation = false;
             this->flagRecord=false;
             emit this->stop();
             this->saveData();
-            this->vData.clear();
+            this->vData.clear();*/
         }
     }
 
@@ -258,15 +259,26 @@ void ProtocolController::timerTick()
 
         QPoint aux = QPoint(this->cursorController->x(),this->cursorController->y());
         this->vectorMousePositions.push_back(aux);
+        //Every X ms, check if the cursor is stationary
         if(this->vectorMousePositions.size() == this->samplesToStop)
         {
+            //First mouse position
             int x0 = this->vectorMousePositions.at(0).x();
             int y0 = this->vectorMousePositions.at(0).y();
+            //Final mouse position
             int xf = this->vectorMousePositions.at(this->samplesToStop-1).x();
             int yf = this->vectorMousePositions.at(this->samplesToStop-1).y();
-            if(abs(xf-x0) <= 1 && abs(yf-y0) <= 1)
+            //If the difference is of one pixel or less, then the cursor is stationary
+            //The cursor should be stationary outside the origin as well
+            if(abs(xf-x0) <= 1 && abs(yf-y0) <= 1 && !this->objCursor->HasCollided(this->objOrigin))
             {
+                this->feedbackCursorColor = Qt::blue;
                 qDebug() << QString::number(this->vectorMousePositions.at(0).x()) << " " << QString::number(this->vectorMousePositions.at(this->samplesToStop-1).x());
+                this->flagPerturbation = false;
+                this->flagRecord=false;
+                emit this->stop();
+                this->saveData();
+                this->vData.clear();
             }
             this->vectorMousePositions.clear();
         }
@@ -286,6 +298,8 @@ void ProtocolController::timerRestTick()
     this->flagFeedback=true;
     //Paints the target back to red
     this->targetColor = Qt::red;
+    //Paints the cursor back to green
+    this->feedbackCursorColor = Qt::green;
 }
 
 //Updates the visual feedback of the cursor according to mouse position
@@ -374,8 +388,9 @@ void ProtocolController::saveData()
     //Changes the target color to "Blue" indicating that
     //the target has been hit
     this->targetColor = Qt::blue;
+    this->feedbackCursorColor = Qt::blue;
     //Clears the QVector "vData" so it can store new visual feeddback samples
-    this->vData.clear();    
+    this->vData.clear();
 }
 
 bool ProtocolController::ExperimentIsRunning()
