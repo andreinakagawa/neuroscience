@@ -82,13 +82,16 @@ private:
     const int objWidth = 40;
     const int cursorWidth = 15;
     const int cursorHeight = 15;
+    const int samplesToStop = 50; //500 ms
     //Defines the session
     const bool perturbation = true;
     const int perturbationDegree = -40;
     const int restInterval = 1500; //ms
     QVector<int> numberTrialsperSession;
     QVector<bool> perturbationSession;
-    QVector<bool> vectorCursorFeedback;
+    QVector<bool> vectorCursorFeedback;    
+    QVector<QPoint> vectorMousePositions;
+    int okcont = 0;
     //Filename prefix
     const QString fileprefix = "andrei_mesa_piloto1";
     //Objects

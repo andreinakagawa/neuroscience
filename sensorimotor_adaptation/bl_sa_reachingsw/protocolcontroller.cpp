@@ -35,9 +35,9 @@ ProtocolController::ProtocolController(QWidget *p)
     this->numberTrialsperSession.push_back(1);
 
     this->perturbationSession.push_back(false);
-    this->perturbationSession.push_back(true);
     this->perturbationSession.push_back(false);
-    this->perturbationSession.push_back(true);
+    this->perturbationSession.push_back(false);
+    this->perturbationSession.push_back(false);
 
     this->vectorCursorFeedback.push_back(true);
     this->vectorCursorFeedback.push_back(true);
@@ -191,8 +191,8 @@ QVector<GUIObject*> ProtocolController::updateGUI()
         //Creates an object that represents the visual feedback
         //Can be different from the actual mouse movement
         //GUIObject *objFeedbackCursor = new GUIObject();
-        x = this->cursorController->x() ;
-        y = this->cursorController->y();
+        x = this->cursorController->x()*2;
+        y = this->cursorController->y()*2;
         objFeedbackCursor->point = new QPointF(x,y);
         objFeedbackCursor->pen = new QPen(Qt::green);
         objFeedbackCursor->pen->setWidth(0);
@@ -243,7 +243,7 @@ void ProtocolController::BeginExperiment()
 void ProtocolController::timerTick()
 {
     //Gets the current time -> to check the sampling frequency
-    QString currentTime = QTime::currentTime().toString("hh:mm:ss.zzz");
+    QString currentTime = QTime::currentTime().toString("hh:mm:ss.zzzz");
     //Locks the mutex for acessing the "cursorController" object for retrieving
     //the x and y position of the visual feedback cursor
     this->mutex->lock();
@@ -255,6 +255,21 @@ void ProtocolController::timerTick()
                 QString::number(this->cursorController->y());
         //Adds the string to the QVector "vData"
         vData.push_back(val);
+
+        QPoint aux = QPoint(this->cursorController->x(),this->cursorController->y());
+        this->vectorMousePositions.push_back(aux);
+        if(this->vectorMousePositions.size() == this->samplesToStop)
+        {
+            int x0 = this->vectorMousePositions.at(0).x();
+            int y0 = this->vectorMousePositions.at(0).y();
+            int xf = this->vectorMousePositions.at(this->samplesToStop-1).x();
+            int yf = this->vectorMousePositions.at(this->samplesToStop-1).y();
+            if(abs(xf-x0) <= 1 && abs(yf-y0) <= 1)
+            {
+                qDebug() << QString::number(this->vectorMousePositions.at(0).x()) << " " << QString::number(this->vectorMousePositions.at(this->samplesToStop-1).x());
+            }
+            this->vectorMousePositions.clear();
+        }
     }    
     //Releases the mutex
     this->mutex->unlock();
