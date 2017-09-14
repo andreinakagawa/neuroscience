@@ -70,21 +70,21 @@ function mtarget=smTransf(vcursor, vtarget, mhand)
     if(vvector(1) == 0)
         direction = (90*%pi)/180;
     else
-        direction = atan(vvector(2)/vvector(1));        
+        direction = abs(atan(vvector(2)/vvector(1)));
     end
     //estimating target location in motor space
-    mtarget = zeros(1,2);
+    mtarget = zeros(1,2); 
     //x-axis    
-    mtarget(1) = mhand(1) + magnitude * cos(direction);
+    mtarget(1) = mhand(1) + (sign(vvector(1)) * magnitude * cos(direction));
     //y-axis
-    mtarget(2) = mhand(2) + magnitude * sin(direction);
+    mtarget(2) = mhand(2) + (sign(vvector(2)) * magnitude * sin(direction));
 endfunction
 //------------------------------------------------------------------------------
 [A,B,C] = pointMassModel(1);
 //------------------------------------------------------------------------------
 //Simulation parameters
 t0=0;
-tf=2;
+tf=3;
 dt = 0.01;
 t = t0:dt:tf;
 //Continuous-time system
@@ -95,7 +95,7 @@ discSys = dscr(contSys,dt);
 //------------------------------------------------------------------------------
 //Weight matrices
 Qd=diag([0.1,0.1,0.1,0.1]);
-Rd=diag([0.01,0.01]);
+Rd=diag([0.0001,0.0001]);
 //Discrete riccati
 Ad = discSys(2); //A
 Bd = discSys(3); //B
@@ -107,7 +107,7 @@ Bd = discSys(3); //B
 //------------------------------------------------------------------------------
 Sdisc = [];
 Kdisc = [];
-S0 = diag([200,0,200,0]); //Estimate for the Riccati matrix 
+S0 = diag([50,0,50,0]); //Estimate for the Riccati matrix 
 for k=1:length(t)
     //Calculating the time-varying gain
     K = inv(Bd'*S0*Bd + Rd)*(Bd'*S0*Ad);
@@ -139,8 +139,10 @@ Ck = [cos((perturbation*%pi)/180) 0 -sin((perturbation*%pi)/180) 0; sin((perturb
 yint = [x0];
 yaux = x0;
 //Delayed feedback and reaction time
-delay = 0.220; //Every 200 ms, target in motor space will be updated
+delay = 0.200; //Every 200 ms, target in motor space will be updated
 t0 = t(1); //first time-step
+//Target jump
+targetJump = 0;
 //------------------------------------------------------------------------------
 for k=1:length(t)-1
     
@@ -175,14 +177,13 @@ for k=1:length(t)-1
         //vtarget = [xd(1), xd(3)];
         mhand = [xint(1,k),xint(3,k)];
         motorTarget = smTransf(vcursor,vtarget,mhand);
-        disp(k)
-        disp(motorTarget);        
         if(motorTarget ~= [xd(1),xd(3)])
             xd(1) = motorTarget(1);
             xd(3) = motorTarget(2);     
             newTime = t(k:$);
             Kdisc = computeGain(Ad,Bd,Qd,Rd,S0,newTime);
             cont = 1;
+            disp('updated');
         end
     end
     
