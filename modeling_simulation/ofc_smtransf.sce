@@ -84,7 +84,7 @@ endfunction
 //------------------------------------------------------------------------------
 //Simulation parameters
 t0=0;
-tf=3;
+tf=6;
 dt = 0.01;
 t = t0:dt:tf;
 //Continuous-time system
