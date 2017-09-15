@@ -95,7 +95,7 @@ discSys = dscr(contSys,dt);
 //------------------------------------------------------------------------------
 //Weight matrices
 Qd=diag([0.1,0.1,0.1,0.1]);
-Rd=diag([0.0001,0.0001]);
+Rd=diag([0.001,0.001]);
 //Discrete riccati
 Ad = discSys(2); //A
 Bd = discSys(3); //B
@@ -202,12 +202,15 @@ end
 //------------------------------------------------------------------------------
 figure();
 plot(xint(1,:),xint(3,:),'k');
-plot(xint(1,$),xint(3,$),'k.');
 plot(yint(1,:),yint(3,:),'b');
-plot(x0(1),x0(3),'b.');
+plot(xint(1,$),xint(3,$),'k.');
 plot(vtarget(1),vtarget(2),'r.');
+plot(x0(1),x0(3),'b.');
+xlabel('x-axis');
+ylabel('y-axis');
+legend('Hand movement', 'Cursor motion');
 ax=gca();
-ax.data_bounds=[-5 -5; 5 5];
+ax.data_bounds=[-3 -1; 3 6];
 figure();
 plot(t,xint(2,:),'r');
 plot(t,xint(4,:),'g');
