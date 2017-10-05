@@ -70,7 +70,7 @@ for k=1:length(t)
     //New riccati solution
     S0 = Ad'*S0*Ad - Ad'*S0*Bd*((Rd + Bd'*S0*Bd)^-1)*Bd'*S0*Ad + Qd;
     //Stores the riccati solution
-    Sdisc = [Sdisc S0];    
+    Sdisc = [S0 Sdisc];    
     //Stores the gain
     Kdisc = [Kdisc K];
 end
